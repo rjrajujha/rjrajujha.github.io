@@ -1,0 +1,33 @@
+<header class="sticky top-0 z-40 border-b border-white/40 bg-slate-100/80 backdrop-blur">
+    <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+        <a href="{% url 'core:home' %}" class="font-heading text-lg font-semibold tracking-tight text-slate-900">rjrajujha</a>
+
+        <button
+            type="button"
+            id="mobile-menu-toggle"
+            class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium md:hidden"
+            aria-controls="primary-nav"
+            aria-expanded="false"
+        >
+            Menu
+        </button>
+
+        <nav id="primary-nav" class="hidden gap-6 text-sm font-medium text-slate-700 md:flex">
+            <a href="/#about" class="transition hover:text-slate-950">About</a>
+            <a href="/#skills" class="transition hover:text-slate-950">Skills</a>
+            <a href="/#projects" class="transition hover:text-slate-950">Projects</a>
+            <a href="/#experience" class="transition hover:text-slate-950">Experience</a>
+            <a href="/#contact" class="transition hover:text-slate-950">Contact</a>
+            <a href="{% url 'projects:list' %}" class="rounded-full bg-slate-900 px-4 py-2 text-white transition hover:bg-slate-700">All Projects</a>
+        </nav>
+    </div>
+
+    <nav id="mobile-nav-panel" class="mx-auto hidden w-full max-w-6xl flex-col gap-3 border-t border-slate-200 px-4 py-4 text-sm font-medium md:hidden sm:px-6">
+        <a href="/#about" class="mobile-link">About</a>
+        <a href="/#skills" class="mobile-link">Skills</a>
+        <a href="/#projects" class="mobile-link">Projects</a>
+        <a href="/#experience" class="mobile-link">Experience</a>
+        <a href="/#contact" class="mobile-link">Contact</a>
+        <a href="{% url 'projects:list' %}" class="mobile-link">All Projects</a>
+    </nav>
+</header>

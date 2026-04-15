@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --surface: 245 248 255;
+  }
+
+  body {
+    background-color: rgb(var(--surface));
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  .mobile-link {
+    @apply rounded-lg px-3 py-2 text-slate-700 transition hover:bg-slate-200 hover:text-slate-900;
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: transform 500ms ease, opacity 500ms ease;
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .chat-row-user {
+    @apply flex justify-end;
+  }
+
+  .chat-row-assistant {
+    @apply flex justify-start;
+  }
+
+  .chat-bubble-user {
+    @apply max-w-[84%] rounded-2xl rounded-br-sm bg-slate-900 px-3 py-2 text-sm text-white;
+  }
+
+  .chat-bubble-assistant {
+    @apply max-w-[84%] rounded-2xl rounded-bl-sm border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700;
+  }
+}

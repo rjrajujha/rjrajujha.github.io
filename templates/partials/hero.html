@@ -1,0 +1,48 @@
+<section class="mx-auto grid w-full max-w-6xl gap-10 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:pt-24">
+    <div class="reveal space-y-7">
+        <p class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1 text-xs font-medium uppercase tracking-[0.14em] text-emerald-800">
+            Open to Backend Roles & Consulting
+        </p>
+
+        <div class="space-y-4">
+            <h1 class="font-heading text-4xl font-semibold leading-tight text-slate-950 sm:text-5xl">
+                {{ profile.name }}
+            </h1>
+            <p class="max-w-2xl text-lg leading-relaxed text-slate-700 sm:text-xl">{{ profile.headline }}</p>
+            <p class="max-w-2xl text-base leading-relaxed text-slate-600">{{ profile.subheadline }}</p>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+            <a href="#projects" class="rounded-full bg-slate-900 px-6 py-3 text-sm font-medium text-white transition hover:bg-slate-700">View Projects</a>
+            <a href="#contact" class="rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-medium text-slate-800 transition hover:border-slate-400">Start a Conversation</a>
+        </div>
+    </div>
+
+    <aside class="reveal rounded-3xl border border-slate-200/80 bg-white/70 p-6 shadow-lg shadow-slate-200/70 backdrop-blur">
+        <h2 class="font-heading text-xl font-semibold text-slate-950">Quick Snapshot</h2>
+        <dl class="mt-5 space-y-4 text-sm text-slate-700">
+            <div>
+                <dt class="font-medium text-slate-900">Location</dt>
+                <dd>{{ profile.location }}</dd>
+            </div>
+            <div>
+                <dt class="font-medium text-slate-900">Email</dt>
+                <dd><a href="mailto:{{ profile.email }}" class="hover:underline">{{ profile.email }}</a></dd>
+            </div>
+            <div>
+                <dt class="font-medium text-slate-900">Phone</dt>
+                <dd><a href="tel:{{ profile.phone }}" class="hover:underline">{{ profile.phone }}</a></dd>
+            </div>
+            <div>
+                <dt class="font-medium text-slate-900">Portfolio Domain</dt>
+                <dd>{{ profile.domain }}</dd>
+            </div>
+        </dl>
+
+        <div class="mt-6 flex flex-wrap gap-3">
+            {% for link in profile.social_links %}
+                <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="rounded-full border border-slate-300 px-4 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900">{{ link.label }}</a>
+            {% endfor %}
+        </div>
+    </aside>
+</section>

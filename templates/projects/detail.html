@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.title }} | Projects{% endblock %}
+
+{% block content %}
+<section class="mx-auto w-full max-w-4xl px-4 py-16 sm:px-6">
+    <a href="{% url 'projects:list' %}" class="text-sm font-medium text-slate-600 underline-offset-4 transition hover:underline">Back to all projects</a>
+
+    <article class="mt-6 rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-sm">
+        <h1 class="font-heading text-4xl font-semibold text-slate-950">{{ project.title }}</h1>
+        <p class="mt-4 text-lg text-slate-700">{{ project.headline }}</p>
+        <p class="mt-4 text-base leading-relaxed text-slate-600">{{ project.description }}</p>
+
+        {% if project.impact %}
+            <p class="mt-6 inline-flex rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-800">{{ project.impact }}</p>
+        {% endif %}
+
+        <div class="mt-6 flex flex-wrap gap-2">
+            {% for tech in project.stack_items %}
+                <span class="rounded-full border border-slate-300 bg-slate-50 px-3 py-1 font-mono text-xs text-slate-700">{{ tech }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="mt-8 flex flex-wrap gap-4 text-sm">
+            {% if project.source_url %}
+                <a href="{{ project.source_url }}" target="_blank" rel="noopener noreferrer" class="rounded-full border border-slate-300 px-4 py-2 font-medium text-slate-800 transition hover:border-slate-500">View Source</a>
+            {% endif %}
+            {% if project.demo_url %}
+                <a href="{{ project.demo_url }}" target="_blank" rel="noopener noreferrer" class="rounded-full bg-slate-900 px-4 py-2 font-medium text-white transition hover:bg-slate-700">Visit Demo</a>
+            {% endif %}
+        </div>
+    </article>
+</section>
+{% endblock %}

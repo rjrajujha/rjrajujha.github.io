@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Personal portfolio of Raju Jha, a backend-focused software engineer specializing in Python, Django, and AI integrations.">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Raju Jha | Software Engineer{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body class="bg-slate-100 font-body text-slate-900 antialiased selection:bg-amber-200 selection:text-slate-900">
+    <div class="relative min-h-screen overflow-x-clip">
+        <div class="pointer-events-none absolute inset-0 -z-10 opacity-90">
+            <div class="absolute left-[-12rem] top-[-7rem] h-[28rem] w-[28rem] rounded-full bg-emerald-200/70 blur-3xl"></div>
+            <div class="absolute right-[-10rem] top-[10rem] h-[24rem] w-[24rem] rounded-full bg-amber-100 blur-3xl"></div>
+            <div class="absolute bottom-[-8rem] left-1/2 h-[24rem] w-[24rem] -translate-x-1/2 rounded-full bg-sky-200/60 blur-3xl"></div>
+        </div>
+
+        {% include 'partials/navbar.html' %}
+
+        {% if messages %}
+            <section class="mx-auto mt-4 w-full max-w-6xl px-4 sm:px-6">
+                {% for message in messages %}
+                    <div class="mb-3 rounded-xl border border-slate-300/80 bg-white/80 px-4 py-3 text-sm shadow-sm {{ message.tags|default:'' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </section>
+        {% endif %}
+
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        {% include 'partials/footer.html' %}
+        {% include 'partials/chatbot_widget.html' %}
+    </div>
+
+    <script src="{% static 'js/site.js' %}" defer></script>
+    <script src="{% static 'js/chatbot.js' %}" defer></script>
+</body>
+</html>
