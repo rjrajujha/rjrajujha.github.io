@@ -1,16 +1,15 @@
 from django.test import TestCase
+from django.urls import reverse
 
-from .models import Project
 
+class ProjectViewsTests(TestCase):
+    def test_project_list_renders_open_source_projects(self):
+        response = self.client.get(reverse("projects:list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "SyncWave")
+        self.assertContains(response, "spa-config-gen")
 
-class ProjectModelTests(TestCase):
-    def test_stack_items_splits_comma_values(self):
-        project = Project(
-            title="Demo",
-            slug="demo",
-            headline="Demo headline",
-            description="Description",
-            tech_stack="Python, Django, TailwindCSS",
-        )
-
-        self.assertEqual(project.stack_items, ["Python", "Django", "TailwindCSS"])
+    def test_project_detail_resolves_syncwave_slug(self):
+        response = self.client.get(reverse("projects:detail", kwargs={"slug": "syncwave"}))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "SyncWave")

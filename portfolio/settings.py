@@ -34,19 +34,68 @@ def env_list(name: str, default: str = "") -> list[str]:
     return [item.strip() for item in raw.split(",") if item.strip()]
 
 
+def env_int(name: str, default: int, min_value: int | None = None) -> int:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        value = int(str(raw).strip())
+    except (TypeError, ValueError):
+        return default
+    if min_value is not None and value < min_value:
+        return min_value
+    return value
+
+
+def resolve_email_backend() -> str:
+    backend = (os.getenv("EMAIL_BACKEND") or "").strip()
+    return backend or "django.core.mail.backends.smtp.EmailBackend"
+
+
+def derive_email_use_tls(email_use_ssl: bool, email_port: int) -> bool:
+    return (not email_use_ssl) and email_port == 587
+
+
+def resolve_contact_min_submit_interval() -> int:
+    return env_int(
+        "CONTACT_MIN_SUBMIT_INTERVAL_SECONDS",
+        45,
+        min_value=10,
+    )
+
+
+def resolve_chatbot_min_submit_interval() -> int:
+    return env_int(
+        "CHATBOT_MIN_SUBMIT_INTERVAL_SECONDS",
+        2,
+        min_value=1,
+    )
+
+
+def resolve_is_production(is_vercel: bool) -> bool:
+    env_name = (os.getenv("DJANGO_ENV") or "").strip().lower()
+    inferred_production = is_vercel or env_name in {"production", "prod"}
+    return env_bool("DJANGO_PRODUCTION", inferred_production)
+
+
+def should_enable_security(is_production: bool, debug: bool) -> bool:
+    return is_production and not debug
+
+
+from portfolio.database_config import build_databases, database_apps, use_database
+
 load_env_file(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-me")
-DEBUG = env_bool("DJANGO_DEBUG", True)
+USE_DATABASE = use_database()
+IS_VERCEL = bool(os.getenv("VERCEL"))
+DEBUG = env_bool("DJANGO_DEBUG", not IS_VERCEL)
+IS_PRODUCTION = resolve_is_production(IS_VERCEL)
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", "")
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "apps.core",
@@ -54,13 +103,13 @@ INSTALLED_APPS = [
     "apps.contact",
     "apps.chatbot",
 ]
+if USE_DATABASE:
+    INSTALLED_APPS = database_apps() + INSTALLED_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -75,8 +124,8 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.core.context_processors.site_profile",
             ],
         },
     },
@@ -85,34 +134,32 @@ TEMPLATES = [
 WSGI_APPLICATION = "portfolio.wsgi.application"
 ASGI_APPLICATION = "portfolio.asgi.application"
 
-DATABASES = {
+if USE_DATABASE:
+    DATABASES = build_databases(BASE_DIR, IS_VERCEL)
+else:
+    # In-memory SQLite satisfies Django internals only; no app models or migrations are used.
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
+    }
+
+CACHES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "portfolio-cache",
     }
 }
 
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
-]
+MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "/static/"
+STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
@@ -122,26 +169,34 @@ MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Email settings used by the contact form workflow.
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_BACKEND = resolve_email_backend()
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_PORT = env_int("EMAIL_PORT", 465, min_value=1)
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
-EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", False)
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@rjrajujha.github.io")
-CONTACT_RECEIVER_EMAIL = os.getenv("CONTACT_RECEIVER_EMAIL", DEFAULT_FROM_EMAIL)
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", True)
+EMAIL_USE_TLS = derive_email_use_tls(EMAIL_USE_SSL, EMAIL_PORT)
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or "no-reply@localhost"
+EMAIL_TO = os.getenv("EMAIL_TO", EMAIL_HOST_USER)
+CONTACT_MIN_SUBMIT_INTERVAL_SECONDS = resolve_contact_min_submit_interval()
 
 # AI chatbot provider configuration.
-CHATBOT_PROVIDER = os.getenv("CHATBOT_PROVIDER", "mock").lower()
+CHATBOT_PROVIDER = os.getenv("CHATBOT_PROVIDER", "local").lower()
 CHATBOT_TIMEOUT_SECONDS = int(os.getenv("CHATBOT_TIMEOUT_SECONDS", "20"))
-CHATBOT_STORE_LOGS = env_bool("CHATBOT_STORE_LOGS", True)
+CHATBOT_STORE_LOGS = env_bool("CHATBOT_STORE_LOGS", False)
+CHATBOT_MAX_CONTEXT_CHARS = int(os.getenv("CHATBOT_MAX_CONTEXT_CHARS", "6500"))
+CHATBOT_MIN_SUBMIT_INTERVAL_SECONDS = resolve_chatbot_min_submit_interval()
+RESUME_URL = os.getenv("RESUME_URL", "").strip()
+RESUME_ACCESS_KEY = os.getenv("RESUME_ACCESS_KEY", "").strip()
+RESUME_SECRET_KEY = os.getenv("RESUME_SECRET_KEY", "RESUME-LINK").strip()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 
-if not DEBUG:
+ENABLE_SECURITY_SETTINGS = should_enable_security(IS_PRODUCTION, DEBUG)
+if ENABLE_SECURITY_SETTINGS:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", True)
     SESSION_COOKIE_SECURE = env_bool("SESSION_COOKIE_SECURE", True)
     CSRF_COOKIE_SECURE = env_bool("CSRF_COOKIE_SECURE", True)

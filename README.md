@@ -1,44 +1,27 @@
 # rjrajujha.github.io
 
-Production-ready personal portfolio built with Django + TailwindCSS, designed for backend scalability and future platform features.
+Production-ready personal portfolio built with Django + TailwindCSS. Database-optional by default, offline-first NLP chatbot, and Docker-ready deployment.
 
 ## Stack
-- Django (server-rendered templates, modular app architecture)
-- TailwindCSS (compiled build, purge-enabled)
-- SQLite (default; swappable for PostgreSQL)
-- Optional AI providers: OpenAI / Ollama / mock fallback
+- Django 6 (server-rendered templates, modular apps)
+- TailwindCSS (compiled, purge-enabled)
+- Offline NLP chatbot with optional OpenAI / Gemini providers
+- Docker multi-stage image (Gunicorn)
 
 ## Project Structure
 ```text
 manage.py
-portfolio/                  # project config (settings, urls, ASGI/WSGI)
+portfolio/                  # settings, urls, database_config
 apps/
-  core/                     # homepage sections and shared content
-  projects/                 # project model + list/detail pages
-  contact/                  # validated contact form + SMTP dispatch
-  chatbot/                  # AI endpoint + chatbot logs
-templates/
-  base.html
-  core/home.html
-  projects/*.html
-  partials/                 # navbar, hero, project_card, contact_form, chatbot_widget
-static/
-  src/styles.css            # Tailwind source
-  css/main.css              # compiled Tailwind bundle
-  js/site.js
-  js/chatbot.js
+  core/                     # homepage content (content.py)
+  projects/                 # content-driven project pages
+  contact/                  # email-only contact workflow
+  chatbot/                  # NLP + provider API
+docs/DATABASE.md            # optional persistence guide
 ```
 
-## Core Features
-- Hero, About, Skills, Projects, Experience, Testimonials placeholder, Contact
-- Reusable template partials for maintainable UI composition
-- Contact workflow with validation, spam honeypot, DB persistence, and SMTP email sending
-- Floating chatbot widget with backend API endpoint (`/chatbot/api/chat/`)
-- Chatbot context grounded in profile, skills, experience, and project data
-- Environment-based configuration for security and provider setup
-
 ## Local Setup
-1. Create and activate virtual environment, then install Python dependencies:
+1. Create virtualenv and install dependencies:
    ```bash
    python -m venv .venv
    source .venv/bin/activate
@@ -48,73 +31,38 @@ static/
    ```bash
    cp .env.example .env
    ```
-3. Install Tailwind dependencies and build CSS:
+3. Build CSS:
    ```bash
    npm install
    npm run build:css
    ```
-4. Run migrations (includes seeded featured projects):
-   ```bash
-   python manage.py migrate
-   ```
-5. Start development server:
+4. Start server (no migrations required):
    ```bash
    python manage.py runserver
    ```
 
-## Tailwind Workflow
-- One-time production build:
-  ```bash
-  npm run build:css
-  ```
-- Watch mode during development:
-  ```bash
-  npm run watch:css
-  ```
+## Docker
+```bash
+docker compose up --build
+```
+Health check: `http://127.0.0.1:8000/health`
 
 ## Environment Variables
-Defined in `.env.example`:
-- Django: `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`
-- SMTP: `EMAIL_*`, `DEFAULT_FROM_EMAIL`, `CONTACT_RECEIVER_EMAIL`
-- Chatbot: `CHATBOT_PROVIDER`, `OPENAI_API_KEY`, `OPENAI_MODEL`, `OLLAMA_*`, `CHATBOT_STORE_LOGS`
+See `.env.example` for full list. Highlights:
+- `USE_DATABASE=false` (default) — content-driven, no ORM persistence
+- `CHATBOT_PROVIDER=local|openai|gemini` — external provider with local NLP fallback
+- `RESUME_URL`, `RESUME_ACCESS_KEY`, `RESUME_SECRET_KEY` — secure resume link flow
+- SMTP/contact settings for email delivery
 
-## AI Chatbot Architecture
-- Frontend widget (`static/js/chatbot.js`) posts JSON to `/chatbot/api/chat/`
-- API view (`apps/chatbot/views.py`) validates input and returns structured JSON response
-- Service layer (`apps/chatbot/services.py`) routes to:
-  - `openai` provider (Chat Completions API)
-  - `ollama` provider (`/api/generate`)
-  - `mock` provider (deterministic portfolio-aware fallback)
-- Optional logging via `ChatbotLog` model for analytics/debugging
+## Chatbot
+- Endpoint: `POST /chatbot/api/chat/`
+- Offline intents: identity, skills, projects, contact, resume secret (fuzzy match)
+- Provider priority: `CHATBOT_PROVIDER` env → fallback to local NLP
 
-## Contact Architecture
-- Form object (`apps/contact/forms.py`) for validation + anti-spam
-- Submission view (`apps/contact/views.py`) stores entries and sends SMTP email
-- Admin panel includes searchable contact submissions
+## Optional Database
+Set `USE_DATABASE=true` and configure SQLite/PostgreSQL per `docs/DATABASE.md` and `portfolio/database.example.py`.
 
-## Deployment Suggestions
-### Render
-- Use `gunicorn portfolio.wsgi`
-- Set env vars in Render dashboard
-- Run build steps:
-  - `pip install -r requirements.txt`
-  - `npm install && npm run build:css`
-  - `python manage.py migrate`
-
-### VPS (Ubuntu + Nginx)
-- App server: Gunicorn + systemd
-- Reverse proxy: Nginx
-- SSL: Let's Encrypt
-- Static strategy: `collectstatic` + Nginx static location
-
-## Scaling Plan
-- Move to PostgreSQL and enable managed backups
-- Add Redis for caching and queueing
-- Offload chatbot logging/analytics to async workers
-- Split chatbot into a dedicated internal API service if traffic grows
-
-## Future Improvements
-- Blog app with markdown/WYSIWYG publishing
-- Public API app (`/api/`) for projects and profile data
-- Admin-authored content model for non-code portfolio updates
-- Analytics dashboard for contact conversions and chatbot usage
+## Tests
+```bash
+python manage.py test
+```

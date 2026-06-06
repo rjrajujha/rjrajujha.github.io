@@ -4,11 +4,34 @@
 
 @layer base {
   :root {
+    color-scheme: light;
     --surface: 245 248 255;
+    --accent: 5 150 105;
+    --accent-soft: 209 250 229;
+    --code-bg: 15 23 42;
+    --section-y: 2.25rem;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --surface: 2 6 23;
+    --accent: 52 211 153;
+    --accent-soft: 6 78 59;
+    --code-bg: 2 6 23;
+  }
+
+  @media (min-width: 640px) {
+    :root {
+      --section-y: 2.75rem;
+    }
+  }
+
+  html {
+    overflow-x: hidden;
   }
 
   body {
-    background-color: rgb(var(--surface));
+    @apply bg-surface text-slate-900 antialiased transition-colors duration-300 dark:text-slate-100;
   }
 
   h1,
@@ -20,19 +43,187 @@
 }
 
 @layer components {
+  .page-container {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  }
+
+  .section-shell {
+    @apply page-container;
+    padding-top: var(--section-y);
+    padding-bottom: var(--section-y);
+  }
+
+  .section-shell-last {
+    @apply section-shell max-sm:pb-[calc(var(--section-y)+4rem)];
+  }
+
+  .hero-shell {
+    @apply page-container pb-5 pt-8 sm:pb-7 sm:pt-10 lg:pt-11;
+  }
+
+  .section-intro {
+    @apply max-w-3xl;
+  }
+
+  .section-heading {
+    @apply font-heading text-2xl font-semibold text-slate-950 sm:text-[1.65rem] dark:text-slate-100;
+  }
+
+  .section-heading::after {
+    content: "";
+    @apply mt-2 block h-0.5 w-10 rounded-full bg-emerald-500;
+  }
+
+  .section-lead {
+    @apply mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-400;
+  }
+
+  .section-aside-layout {
+    @apply grid gap-5 lg:grid-cols-[minmax(0,11rem)_minmax(0,1fr)] lg:items-start lg:gap-x-10;
+  }
+
+  .projects-grid {
+    @apply grid gap-3 sm:gap-4 lg:grid-cols-2;
+  }
+
+  .projects-grid > article:last-child:nth-child(odd) {
+    @apply lg:col-span-2;
+  }
+
+  .surface-card {
+    @apply rounded-2xl border border-slate-200/90 bg-white/90 shadow-sm dark:border-slate-800 dark:bg-slate-900/85;
+  }
+
+  .surface-card-interactive {
+    @apply surface-card transition hover:border-slate-300 hover:shadow-md dark:hover:border-slate-700;
+  }
+
+  .tag-pill {
+    @apply rounded-md bg-slate-100 px-2.5 py-1 font-mono text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-300;
+  }
+
+  .link-action {
+    @apply text-sm font-medium text-slate-700 underline-offset-4 transition hover:text-emerald-700 hover:underline dark:text-slate-300 dark:hover:text-emerald-400;
+  }
+
   .mobile-link {
-    @apply rounded-lg px-3 py-2 text-slate-700 transition hover:bg-slate-200 hover:text-slate-900;
+    @apply rounded-xl px-3.5 py-2 text-slate-700 transition hover:bg-slate-200 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100;
+  }
+
+  .nav-link {
+    @apply inline-flex h-9 items-center rounded-full px-3 text-slate-700 transition duration-200 hover:bg-slate-200/90 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100;
+  }
+
+  .theme-switch {
+    @apply inline-flex items-center rounded-full border border-slate-300/80 bg-white/85 p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900/80;
+  }
+
+  .theme-option {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 transition duration-200 hover:bg-slate-200/80 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/70 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 dark:focus-visible:ring-slate-500/50;
+  }
+
+  .theme-option svg {
+    @apply h-4 w-4;
+  }
+
+  .theme-option-active {
+    @apply bg-slate-900 text-white shadow-sm dark:bg-slate-100 dark:text-slate-900;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition duration-200 hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-800 transition duration-200 hover:border-slate-400 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-500;
+  }
+
+  .form-label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300;
+  }
+
+  .form-control {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/20;
   }
 
   .reveal {
     opacity: 0;
-    transform: translateY(16px);
-    transition: transform 500ms ease, opacity 500ms ease;
+    transform: translateY(12px);
+    transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 420ms ease;
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: transform, opacity;
   }
 
   .reveal.is-visible {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  /* —— Chat widget —— */
+  .chat-root {
+    @apply fixed z-50;
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
+    bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 640px) {
+    .chat-root {
+      right: max(1.25rem, env(safe-area-inset-right, 0px));
+      bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  .chat-fab {
+    @apply inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:bg-emerald-500 dark:hover:bg-emerald-400;
+  }
+
+  .chat-fab.is-hidden {
+    @apply pointer-events-none invisible;
+  }
+
+  .chat-panel {
+    @apply fixed inset-x-3 bottom-3 z-50 flex h-[min(36rem,calc(100dvh-1.5rem))] w-[calc(100%-1.5rem)] max-w-[24rem] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-950;
+  }
+
+  @media (min-width: 640px) {
+    .chat-panel {
+      @apply inset-x-auto h-[min(32rem,calc(100dvh-6rem))] w-[26rem];
+      right: max(1.25rem, env(safe-area-inset-right, 0px));
+      bottom: max(4.5rem, calc(env(safe-area-inset-bottom, 0px) + 3rem));
+    }
+  }
+
+  .chat-icon-btn {
+    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/70 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100;
+  }
+
+  .chat-icon-btn-danger:hover {
+    @apply text-rose-600 dark:text-rose-400;
+  }
+
+  .chat-messages {
+    @apply min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-4 py-4;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chat-messages-inner {
+    @apply flex min-h-full flex-col gap-3;
+  }
+
+  .chat-messages-inner.is-idle {
+    @apply justify-center;
+  }
+
+  .chat-suggestions {
+    @apply rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/80;
+  }
+
+  .chat-suggestions.hidden {
+    display: none;
+  }
+
+  .chat-suggestion {
+    @apply rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left text-sm text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-950/40 dark:hover:text-slate-100;
   }
 
   .chat-row-user {
@@ -44,10 +235,90 @@
   }
 
   .chat-bubble-user {
-    @apply max-w-[84%] rounded-2xl rounded-br-sm bg-slate-900 px-3 py-2 text-sm text-white;
+    @apply max-w-[min(100%,18rem)] break-words rounded-2xl rounded-br-sm bg-emerald-600 px-4 py-2.5 text-sm leading-relaxed text-white dark:bg-emerald-500;
   }
 
   .chat-bubble-assistant {
-    @apply max-w-[84%] rounded-2xl rounded-bl-sm border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700;
+    @apply max-w-[min(100%,20rem)] break-words rounded-2xl rounded-bl-sm border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm leading-relaxed text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100;
+  }
+
+  .chat-bubble-typing {
+    @apply text-slate-500 dark:text-slate-400;
+  }
+
+  .chat-link {
+    @apply break-words text-sky-700 underline underline-offset-2 hover:text-sky-600 dark:text-sky-400 dark:hover:text-sky-300;
+  }
+
+  .chat-typing-dots {
+    @apply inline-flex items-center gap-1;
+  }
+
+  .chat-typing-dots span {
+    @apply h-1.5 w-1.5 animate-pulse rounded-full bg-slate-400;
+  }
+
+  .chat-typing-dots span:nth-child(2) {
+    animation-delay: 120ms;
+  }
+
+  .chat-typing-dots span:nth-child(3) {
+    animation-delay: 240ms;
+  }
+
+  body.chat-panel-open {
+    overflow: hidden;
+  }
+
+  .code-terminal {
+    background: linear-gradient(160deg, rgb(var(--code-bg)) 0%, rgb(15 23 42 / 0.92) 100%);
+  }
+
+  .dev-code-screen {
+    @apply min-h-[10rem] max-w-full sm:min-h-[11rem];
+    contain: layout style paint;
+  }
+
+  .dev-terminal-screen {
+    @apply min-h-[9rem] max-w-full sm:min-h-[10rem];
+    contain: layout style paint;
+  }
+
+  .dev-caret {
+    display: inline-block;
+    width: 0.5rem;
+    height: 1em;
+    margin-left: 1px;
+    vertical-align: text-bottom;
+    background: rgb(52 211 153);
+    animation: dev-caret-blink 1s step-end infinite;
+  }
+}
+
+@keyframes dev-caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    transition-delay: 0ms;
+    will-change: auto;
+  }
+
+  .dev-caret {
+    animation: none;
+  }
+
+  .chat-messages {
+    scroll-behavior: auto;
   }
 }

@@ -1,6 +1,11 @@
-<footer class="border-t border-slate-200/90 bg-white/70 py-8">
-    <div class="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <p>&copy; {% now "Y" %} Raju Jha. Built with Django + TailwindCSS.</p>
-        <a href="mailto:raju@mail.devoutgrowth.com" class="underline-offset-4 transition hover:underline">raju@mail.devoutgrowth.com</a>
+<footer class="border-t border-slate-200/90 bg-white/70 py-6 transition-colors dark:border-slate-800 dark:bg-slate-950/80">
+    <div class="page-container grid gap-3 text-sm text-slate-600 md:grid-cols-[1fr_auto] md:items-center dark:text-slate-400">
+        <p class="leading-relaxed text-center md:text-left">
+            &copy; {% now "Y" %} Raju Jha · Built with Django + TailwindCSS
+        </p>
+        <div class="flex flex-wrap items-center justify-center gap-4 md:justify-end">
+            <a href="/" data-open-contact-modal class="underline-offset-4 transition hover:text-slate-900 hover:underline dark:hover:text-slate-200">Contact</a>
+            <a href="https://github.com/rjrajujha/rjrajujha.github.io" target="_blank" rel="noopener noreferrer" class="underline-offset-4 transition hover:text-slate-900 hover:underline dark:hover:text-slate-200">Source Code</a>
+        </div>
     </div>
 </footer>

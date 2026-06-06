@@ -1,33 +1,78 @@
-<header class="sticky top-0 z-40 border-b border-white/40 bg-slate-100/80 backdrop-blur">
-    <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-        <a href="{% url 'core:home' %}" class="font-heading text-lg font-semibold tracking-tight text-slate-900">rjrajujha</a>
+<header class="sticky top-0 z-40 border-b border-white/40 bg-slate-100/85 backdrop-blur transition-colors dark:border-slate-800 dark:bg-slate-950/80">
+    <div class="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+        <a href="{% url 'core:home' %}" class="font-heading text-lg font-semibold tracking-tight text-slate-900 transition-colors hover:text-slate-700 dark:text-slate-100 dark:hover:text-slate-300">Raju Jha</a>
 
         <button
             type="button"
             id="mobile-menu-toggle"
-            class="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium md:hidden"
-            aria-controls="primary-nav"
+            class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white/70 px-3 py-2 text-sm font-medium text-slate-800 transition hover:border-slate-400 hover:bg-white md:hidden dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-900"
+            aria-controls="mobile-nav-panel"
             aria-expanded="false"
         >
             Menu
         </button>
 
-        <nav id="primary-nav" class="hidden gap-6 text-sm font-medium text-slate-700 md:flex">
-            <a href="/#about" class="transition hover:text-slate-950">About</a>
-            <a href="/#skills" class="transition hover:text-slate-950">Skills</a>
-            <a href="/#projects" class="transition hover:text-slate-950">Projects</a>
-            <a href="/#experience" class="transition hover:text-slate-950">Experience</a>
-            <a href="/#contact" class="transition hover:text-slate-950">Contact</a>
-            <a href="{% url 'projects:list' %}" class="rounded-full bg-slate-900 px-4 py-2 text-white transition hover:bg-slate-700">All Projects</a>
-        </nav>
+        <div class="hidden items-center gap-3 md:flex">
+            <nav id="primary-nav" class="flex items-center gap-1 text-sm font-medium">
+                <a href="/#about" class="nav-link">About</a>
+                <a href="/#skills" class="nav-link">Skills</a>
+                <a href="/#projects" class="nav-link">Projects</a>
+                <a href="/#experience" class="nav-link">Experience</a>
+                <a href="/" data-open-contact-modal class="nav-link">Contact</a>
+            </nav>
+
+            <div class="theme-switch" role="group" aria-label="Theme switcher">
+                <button type="button" data-theme-option="light" class="theme-option" aria-label="Use light theme" title="Light theme">
+                    <span class="sr-only">Light</span>
+                    <svg viewBox="0 0 24 24" width="16" height="16" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path stroke-linecap="round" d="M12 2.5v2.2M12 19.3v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"></path>
+                    </svg>
+                </button>
+                <button type="button" data-theme-option="dark" class="theme-option" aria-label="Use dark theme" title="Dark theme">
+                    <span class="sr-only">Dark</span>
+                    <svg viewBox="0 0 24 24" width="16" height="16" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 14.7A8.5 8.5 0 0 1 9.3 4a8.5 8.5 0 1 0 10.7 10.7Z"></path>
+                    </svg>
+                </button>
+                <button type="button" data-theme-option="system" class="theme-option" aria-label="Use system theme" title="System theme">
+                    <span class="sr-only">System</span>
+                    <svg viewBox="0 0 24 24" width="16" height="16" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                        <rect x="3.5" y="4.5" width="17" height="12" rx="2"></rect>
+                        <path stroke-linecap="round" d="M8 19.5h8M12 16.5v3"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <nav id="mobile-nav-panel" class="mx-auto hidden w-full max-w-6xl flex-col gap-3 border-t border-slate-200 px-4 py-4 text-sm font-medium md:hidden sm:px-6">
+    <nav id="mobile-nav-panel" class="mx-auto hidden w-full max-w-6xl flex-col gap-3 border-t border-slate-200 px-4 py-4 text-sm font-medium md:hidden sm:px-6 dark:border-slate-800">
         <a href="/#about" class="mobile-link">About</a>
         <a href="/#skills" class="mobile-link">Skills</a>
         <a href="/#projects" class="mobile-link">Projects</a>
         <a href="/#experience" class="mobile-link">Experience</a>
-        <a href="/#contact" class="mobile-link">Contact</a>
-        <a href="{% url 'projects:list' %}" class="mobile-link">All Projects</a>
+        <a href="/" data-open-contact-modal class="mobile-link">Contact</a>
+        <div class="theme-switch mt-2 w-fit" role="group" aria-label="Theme switcher">
+            <button type="button" data-theme-option="light" class="theme-option" aria-label="Use light theme" title="Light theme">
+                <span class="sr-only">Light</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path stroke-linecap="round" d="M12 2.5v2.2M12 19.3v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"></path>
+                </svg>
+            </button>
+            <button type="button" data-theme-option="dark" class="theme-option" aria-label="Use dark theme" title="Dark theme">
+                <span class="sr-only">Dark</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 14.7A8.5 8.5 0 0 1 9.3 4a8.5 8.5 0 1 0 10.7 10.7Z"></path>
+                </svg>
+            </button>
+            <button type="button" data-theme-option="system" class="theme-option" aria-label="Use system theme" title="System theme">
+                <span class="sr-only">System</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <rect x="3.5" y="4.5" width="17" height="12" rx="2"></rect>
+                    <path stroke-linecap="round" d="M8 19.5h8M12 16.5v3"></path>
+                </svg>
+            </button>
+        </div>
     </nav>
 </header>

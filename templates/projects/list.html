@@ -3,17 +3,17 @@
 {% block title %}Projects | Raju Jha{% endblock %}
 
 {% block content %}
-<section class="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
-    <header class="mb-10 max-w-3xl">
-        <h1 class="font-heading text-4xl font-semibold text-slate-950">Projects</h1>
-        <p class="mt-3 text-base text-slate-600">A backend-oriented project portfolio spanning product engineering, automation systems, and infrastructure tooling.</p>
+<section class="section-shell">
+    <header class="section-intro mb-5">
+        <h1 class="section-heading">Projects</h1>
+        <p class="section-lead">A backend-oriented project portfolio spanning product engineering, automation systems, and infrastructure tooling.</p>
     </header>
 
-    <div class="grid gap-6 lg:grid-cols-2">
+    <div class="projects-grid">
         {% for project in projects %}
             {% include 'partials/project_card.html' %}
         {% empty %}
-            <p class="text-sm text-slate-600">No projects published yet.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">No projects published yet.</p>
         {% endfor %}
     </div>
 </section>

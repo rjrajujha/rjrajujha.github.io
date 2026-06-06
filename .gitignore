@@ -39,6 +39,7 @@ staticfiles/
 # IDE / Editor
 # -----------------------------------
 .vscode/
+.codex
 .idea/
 *.swp
 *.swo
