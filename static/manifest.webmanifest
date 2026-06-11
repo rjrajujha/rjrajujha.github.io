@@ -1,22 +1,24 @@
 {
-  "name": "Raju Jha Portfolio",
+  "name": "Raju Jha | Portfolio",
   "short_name": "Ask Raju",
-  "description": "Portfolio of Raju Jha, a backend-focused full-stack engineer building APIs, automation systems, and practical AI integrations.",
+  "description": "Engineering knowledge base for Raju Jha — backend systems, full-stack applications, and developer tooling.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "theme_color": "#0f172a",
-  "background_color": "#f1f5f9",
+  "theme_color": "#09090b",
+  "background_color": "#fafafa",
   "icons": [
     {
       "src": "/static/favicon/android-chrome-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/static/favicon/android-chrome-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

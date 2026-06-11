@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from django.conf import settings
 from django.contrib import messages
 from django.core.cache import cache
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage, send_mail
 from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -139,13 +139,14 @@ class ContactSubmitView(FormView):
         ack_sent = False
         if settings.EMAIL_TO:
             try:
-                send_mail(
+                notification = EmailMessage(
                     subject=notify_subject,
-                    message=notify_body,
+                    body=notify_body,
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[settings.EMAIL_TO],
-                    fail_silently=False,
+                    to=[settings.EMAIL_TO],
+                    reply_to=[submission.email],
                 )
+                notification.send(fail_silently=False)
                 notify_sent = True
             except Exception:  # noqa: BLE001
                 logger.warning("Failed to send contact submission notification email.")
@@ -155,10 +156,9 @@ class ContactSubmitView(FormView):
         ack_subject = "Thanks for contacting Raju Jha"
         ack_body = (
             f"Hi {submission.name},\n\n"
-            "Thanks for reaching out through the portfolio website. "
-            "Your message has been received and I will get back to you soon.\n\n"
-            f"Subject: {submission.subject}\n\n"
-            "Best regards,\n"
+            "Thank you for reaching out.\n\n"
+            "Your message has been received and I will get back to you as soon as possible.\n\n"
+            "Thanks,\n"
             "Raju Jha"
         )
 

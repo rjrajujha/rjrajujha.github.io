@@ -22,4 +22,4 @@ def try_resume_access_reply(user_message: str) -> str | None:
         separator = "&" if "?" in resume_url else "?"
         link = f"{resume_url}{separator}key={access_key}"
 
-    return f"Here is the secure resume link: {link}"
+    return f"You can view my resume here:\n\n[Resume PDF]({link})"

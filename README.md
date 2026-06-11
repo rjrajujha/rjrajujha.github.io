@@ -1,11 +1,9 @@
-# rjrajujha.github.io
-
-Production-ready personal portfolio built with Django + TailwindCSS. Database-optional by default, offline-first NLP chatbot, and Docker-ready deployment.
+Personal portfolio built with Django + TailwindCSS. Database-optional by default, local-first NLP chatbot, and Docker-ready deployment.
 
 ## Stack
 - Django 6 (server-rendered templates, modular apps)
 - TailwindCSS (compiled, purge-enabled)
-- Offline NLP chatbot with optional OpenAI / Gemini providers
+- Local NLP chatbot with optional OpenAI / Gemini providers
 - Docker multi-stage image (Gunicorn)
 
 ## Project Structure

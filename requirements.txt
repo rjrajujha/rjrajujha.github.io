@@ -1,2 +1,5 @@
 Django>=6.0,<6.1
 gunicorn>=22.0
+markdown>=3.7
+Pygments>=2.18
+PyYAML>=6.0

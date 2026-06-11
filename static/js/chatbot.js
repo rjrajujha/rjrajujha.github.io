@@ -49,6 +49,10 @@
   let typingNode = null;
   let stickToBottom = true;
 
+  function isOffline() {
+    return typeof navigator !== "undefined" && navigator.onLine === false;
+  }
+
   function naturalTypingDelay(inputText) {
     const baseDelay = 380;
     const lengthFactor = Math.min(String(inputText || "").length * 7, 480);
@@ -62,7 +66,7 @@
 
   function setSuggestionsVisibility() {
     const hasMessages = messagesInner.querySelectorAll(".chat-row-user, .chat-row-assistant").length > 0;
-    emptyState.classList.toggle("hidden", hasMessages);
+    emptyState.classList.toggle("is-hidden", hasMessages);
     messagesInner.classList.toggle("is-idle", !hasMessages);
   }
 
@@ -95,38 +99,66 @@
     { passive: true }
   );
 
-  function appendTextWithLinks(target, text) {
+  const markdownLinkPattern = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g;
+
+  function createChatLink(href, label) {
+    const anchor = document.createElement("a");
+    anchor.href = href;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    anchor.className = "chat-link";
+    anchor.textContent = label;
+    return anchor;
+  }
+
+  function appendPlainUrls(target, text) {
+    const parts = String(text || "").split(urlPattern);
+    parts.forEach(function (part) {
+      if (!part) {
+        return;
+      }
+      if (/^https?:\/\//.test(part)) {
+        let cleanUrl = part;
+        let trailing = "";
+        while (/[),.;!?]$/.test(cleanUrl)) {
+          trailing = cleanUrl.slice(-1) + trailing;
+          cleanUrl = cleanUrl.slice(0, -1);
+        }
+
+        target.appendChild(createChatLink(cleanUrl, cleanUrl));
+        if (trailing) {
+          target.appendChild(document.createTextNode(trailing));
+        }
+        return;
+      }
+      target.appendChild(document.createTextNode(part));
+    });
+  }
+
+  function appendInlineMarkdown(target, text) {
     const raw = String(text || "");
-    const lines = raw.split("\n");
+    let lastIndex = 0;
+    let match;
+
+    markdownLinkPattern.lastIndex = 0;
+    while ((match = markdownLinkPattern.exec(raw)) !== null) {
+      if (match.index > lastIndex) {
+        appendPlainUrls(target, raw.slice(lastIndex, match.index));
+      }
+      target.appendChild(createChatLink(match[2], match[1]));
+      lastIndex = match.index + match[0].length;
+    }
+
+    if (lastIndex < raw.length) {
+      appendPlainUrls(target, raw.slice(lastIndex));
+    }
+  }
+
+  function appendTextWithLinks(target, text) {
+    const lines = String(text || "").split("\n");
 
     lines.forEach(function (line, index) {
-      const parts = line.split(urlPattern);
-      parts.forEach(function (part) {
-        if (!part) {
-          return;
-        }
-        if (/^https?:\/\//.test(part)) {
-          let cleanUrl = part;
-          let trailing = "";
-          while (/[),.;!?]$/.test(cleanUrl)) {
-            trailing = cleanUrl.slice(-1) + trailing;
-            cleanUrl = cleanUrl.slice(0, -1);
-          }
-
-          const anchor = document.createElement("a");
-          anchor.href = cleanUrl;
-          anchor.target = "_blank";
-          anchor.rel = "noopener noreferrer";
-          anchor.className = "chat-link";
-          anchor.textContent = cleanUrl;
-          target.appendChild(anchor);
-          if (trailing) {
-            target.appendChild(document.createTextNode(trailing));
-          }
-          return;
-        }
-        target.appendChild(document.createTextNode(part));
-      });
+      appendInlineMarkdown(target, line);
       if (index < lines.length - 1) {
         target.appendChild(document.createElement("br"));
       }
@@ -147,62 +179,73 @@
     scrollToBottom(true);
   }
 
-  function syncPanelViewport() {
-    if (panel.classList.contains("hidden")) {
-      panel.style.removeProperty("height");
+  function isMobileChat() {
+    return window.matchMedia("(max-width: 1023px)").matches;
+  }
+
+  function syncKeyboardInset() {
+    if (panel.classList.contains("is-closed") || !isMobileChat()) {
+      panel.style.removeProperty("--keyboard-inset");
       return;
     }
 
     const viewport = window.visualViewport;
     if (!viewport) {
-      panel.style.removeProperty("height");
+      panel.style.removeProperty("--keyboard-inset");
       return;
     }
 
-    const keyboardLikely = viewport.height < window.innerHeight * 0.8;
-    const compactLayout = window.matchMedia("(max-width: 639px)").matches;
-
-    if (!keyboardLikely || !compactLayout) {
-      panel.style.removeProperty("height");
-      scrollToBottom(false);
-      return;
+    const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+    if (inset > 0) {
+      panel.style.setProperty("--keyboard-inset", inset + "px");
+    } else {
+      panel.style.removeProperty("--keyboard-inset");
     }
-
-    const topInset = Math.max(viewport.offsetTop, 0);
-    const height = Math.max(280, viewport.height - topInset - 8);
-    panel.style.height = height + "px";
     scrollToBottom(false);
   }
 
   function setPanel(open) {
-    panel.classList.toggle("hidden", !open);
+    panel.classList.toggle("is-closed", !open);
+    panel.setAttribute("aria-hidden", String(!open));
     toggleBtn.classList.toggle("is-hidden", open);
-    toggleBtn.classList.toggle("hidden", open);
     toggleBtn.setAttribute("aria-expanded", String(open));
-    toggleBtn.setAttribute("aria-hidden", String(open));
     document.body.classList.toggle("chat-panel-open", open);
 
     if (open) {
-      syncPanelViewport();
+      syncKeyboardInset();
       window.setTimeout(function () {
         input.focus({ preventScroll: true });
         scrollToBottom(true);
       }, 50);
     } else {
-      panel.style.removeProperty("height");
+      panel.style.removeProperty("--keyboard-inset");
       input.blur();
     }
   }
 
   if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", syncPanelViewport);
-    window.visualViewport.addEventListener("scroll", syncPanelViewport);
+    window.visualViewport.addEventListener("resize", syncKeyboardInset);
   }
 
+  input.addEventListener("focus", syncKeyboardInset);
+  input.addEventListener("blur", function () {
+    window.setTimeout(syncKeyboardInset, 100);
+  });
+
   function setLoading(loading) {
-    input.disabled = loading;
     sendButton.disabled = loading;
     sendButton.setAttribute("aria-busy", String(loading));
+    input.setAttribute("aria-busy", String(loading));
+  }
+
+  function keepInputFocused() {
+    window.requestAnimationFrame(function () {
+      if (panel.classList.contains("is-closed")) {
+        return;
+      }
+      input.focus({ preventScroll: true });
+      syncKeyboardInset();
+    });
   }
 
   function showTypingIndicator() {
@@ -333,20 +376,34 @@
   async function confirmClearConversation() {
     if (window.GlobalModal && typeof window.GlobalModal.confirm === "function") {
       const action = await window.GlobalModal.confirm({
-        title: "Clear chat",
+        title: "",
         heading: "Clear conversation?",
-        body: "This removes the current chat history from this browser session.",
+        body: "This will permanently remove the current conversation history from this device.",
         cancelText: "Cancel",
-        submitText: "Clear",
-        submitColor: "danger",
+        submitText: "Clear Conversation",
+        panelClass: "app-modal-panel-confirm",
+        headingClass: "app-modal-heading-confirm",
+        bodyClass: "app-modal-body-confirm",
       });
       return action === "submit";
     }
     return window.confirm("Clear this conversation?");
   }
 
+  function syncChatbotVisibility() {
+    const offline = isOffline();
+    root.hidden = offline;
+    if (offline) {
+      setPanel(false);
+    }
+  }
+
+  window.addEventListener("online", syncChatbotVisibility);
+  window.addEventListener("offline", syncChatbotVisibility);
+  syncChatbotVisibility();
+
   toggleBtn.addEventListener("click", function () {
-    const isHidden = panel.classList.contains("hidden");
+    const isHidden = panel.classList.contains("is-closed");
     setPanel(isHidden);
 
     if (isHidden && messagesInner.querySelectorAll(".chat-row-user, .chat-row-assistant").length === 0) {
@@ -360,7 +417,7 @@
   });
 
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && !panel.classList.contains("hidden")) {
+    if (event.key === "Escape" && !panel.classList.contains("is-closed")) {
       setPanel(false);
     }
   });
@@ -373,6 +430,10 @@
       }
     });
   }
+
+  sendButton.addEventListener("pointerdown", function (event) {
+    event.preventDefault();
+  });
 
   form.addEventListener("submit", async function (event) {
     event.preventDefault();
@@ -392,8 +453,10 @@
     appendMessage("user", message);
     input.value = "";
     resizeInput();
+    keepInputFocused();
     setLoading(true);
     showTypingIndicator();
+    keepInputFocused();
 
     try {
       const typingDelay = naturalTypingDelay(message);
@@ -427,18 +490,9 @@
     } catch (error) {
       hideTypingIndicator();
       appendMessage("assistant", "I could not complete that request right now. Please try again in a moment.");
-      if (window.GlobalModal && typeof window.GlobalModal.alert === "function") {
-        window.GlobalModal.alert({
-          title: "Chatbot",
-          heading: "Temporary issue",
-          body: "Ask Raju is currently unavailable. Please retry in a moment.",
-          okColor: "warning",
-          okText: "Close",
-        });
-      }
     } finally {
       setLoading(false);
-      input.focus({ preventScroll: true });
+      keepInputFocused();
       scrollToBottom(true);
     }
   });

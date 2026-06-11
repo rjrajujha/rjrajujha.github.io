@@ -6,14 +6,8 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 
-from apps.projects.services import load_projects
-
-from .content import (
-    ABOUT_POINTS,
-    EXPERIENCE_ITEMS,
-    PROFILE,
-    SKILL_GROUPS,
-)
+from .markdown_loader import load_site_context
+from .page_context import build_site_page_context
 
 
 class HomePageView(TemplateView):
@@ -21,15 +15,7 @@ class HomePageView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update(
-            {
-                "profile": PROFILE,
-                "about_points": ABOUT_POINTS,
-                "skill_groups": SKILL_GROUPS,
-                "experience_items": EXPERIENCE_ITEMS,
-                "featured_projects": load_projects(featured_only=True, limit=6),
-            }
-        )
+        context.update(build_site_page_context(self.request))
         return context
 
 
@@ -54,13 +40,24 @@ class HealthCheckView(View):
             "status": status,
             "timestamp": timezone.now().isoformat(),
             "database": database,
-            "service": "rjrajujha-portfolio",
+            "service": "rjrajujha-engineering-profile",
         }
         return JsonResponse(payload, status=200)
 
 
 class OfflinePageView(TemplateView):
     template_name = "core/offline.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            build_site_page_context(
+                self.request,
+                page_title=f"Offline | {load_site_context().name}",
+                page_description="You appear to be offline.",
+            )
+        )
+        return context
 
 
 class ServiceWorkerView(TemplateView):
@@ -72,3 +69,16 @@ class ServiceWorkerView(TemplateView):
         response["Service-Worker-Allowed"] = "/"
         response["Cache-Control"] = "no-cache"
         return response
+
+
+class DebugRaise500View(View):
+    """Gated test endpoint for production error-page verification only."""
+
+    http_method_names = ["get"]
+
+    def get(self, request, *args, **kwargs):
+        if not getattr(settings, "ENABLE_ERROR_TEST_ROUTES", False):
+            from django.http import Http404
+
+            raise Http404()
+        raise RuntimeError("Test exception")

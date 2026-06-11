@@ -115,6 +115,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "portfolio.urls"
+CSRF_FAILURE_VIEW = "apps.core.error_views.csrf_failure"
+ENABLE_ERROR_TEST_ROUTES = env_bool("ENABLE_ERROR_TEST_ROUTES", False)
 
 TEMPLATES = [
     {

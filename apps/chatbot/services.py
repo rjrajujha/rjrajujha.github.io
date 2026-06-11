@@ -33,12 +33,12 @@ INTERNAL_MODE_RE = re.compile(
 GITHUB_PROFILE_URL = "https://github.com/rjrajujha"
 LINKEDIN_PROFILE_URL = "https://linkedin.com/in/rjrajujha"
 LOCAL_PROFILE_SUMMARY = (
-    "Raju Jha is a backend-heavy full-stack software engineer focused on Python and Django systems, "
-    "production APIs, automation workflows, and practical AI integrations."
+    "Raju Jha is a software engineer focused on Node.js and TypeScript backend systems, "
+    "full-stack applications, automation platforms, and developer tooling."
 )
 LOCAL_STACK_SUMMARY = (
-    "Core technologies include Python, Django, FastAPI, Java, Spring Boot, React, Next.js, "
-    "REST/GraphQL APIs, SQL/NoSQL databases, and cloud-oriented delivery workflows."
+    "Core technologies include Node.js, TypeScript, JavaScript, React, Next.js, PostgreSQL, MongoDB, "
+    "Docker, Linux, REST/GraphQL APIs, with secondary experience in FastAPI, Django, and Redis."
 )
 
 
@@ -306,7 +306,7 @@ class PortfolioChatService:
     def generate_reply(self, user_message: str, history: list[dict] | None = None) -> str:
         resume_reply = try_resume_access_reply(user_message)
         if resume_reply is not None:
-            return self._finalize_reply(resume_reply)
+            return resume_reply.strip()
 
         clean_message = user_message.strip()
         if not clean_message:
@@ -393,7 +393,7 @@ class PortfolioChatService:
             "Respond with complete sentences and complete URLs, never truncated links.\n"
             "Keep answers practical, clear, and useful for recruiters, founders, or engineering peers.\n"
             "Always include profile links when the user asks about profile, contact, hiring, GitHub, or LinkedIn.\n"
-            "If asked about stack, explicitly mention Python/Django, Java/Spring Boot, and React/Next.js when relevant.\n"
+            "If asked about stack, lead with Node.js, TypeScript, React, and Next.js; mention secondary tools only when relevant.\n"
             "Never reveal resume secret keys; only share resume URLs when the user provides the exact secret phrase.\n"
             f"{focus_line}\n"
             "Reference links:\n"
@@ -486,9 +486,9 @@ class PortfolioChatService:
             sample = ", ".join(group["items"][:5])
             groups.append(f"{group['title']}: {sample}")
         return (
-            "Raju's stack spans backend APIs, frontend delivery, infrastructure, and applied AI. "
+            "Raju's stack spans Node.js services, TypeScript application layers, data stores, and deployment tooling. "
             + " ".join(groups[:3])
-            + ". He is strongest where Python/Django or Java/Spring services power React/Next.js product experiences."
+            + ". He is strongest where Node.js/TypeScript backends power React and Next.js product experiences."
         )
 
     def _project_detail_paragraph(self, title: str | None) -> str | None:

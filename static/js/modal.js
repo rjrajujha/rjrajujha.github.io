@@ -30,17 +30,19 @@
   }
 
   const queue = [];
+  /** @type {Array<(action: string) => void>} */
+  const closeWaiters = [];
   let activeState = null;
   let cleanupListeners = null;
   let previousActiveElement = null;
 
   const sizeClassMap = {
-    sm: "max-w-sm",
-    md: "max-w-lg",
-    lg: "max-w-2xl",
-    xl: "max-w-3xl",
-    "2xl": "max-w-4xl",
-    full: "max-w-5xl",
+    sm: "app-modal-size-sm",
+    md: "app-modal-size-md",
+    lg: "app-modal-size-lg",
+    xl: "app-modal-size-xl",
+    "2xl": "app-modal-size-2xl",
+    full: "app-modal-size-full",
   };
 
   const textSizeMap = {
@@ -57,16 +59,11 @@
   };
 
   const buttonPalette = {
-    neutral:
-      "rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-400 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:text-slate-100",
-    primary:
-      "rounded-full bg-slate-900 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400",
-    success:
-      "rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400",
-    warning:
-      "rounded-full bg-amber-500 px-5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-400 dark:hover:bg-amber-300",
-    danger:
-      "rounded-full bg-rose-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-rose-500 dark:hover:bg-rose-400",
+    neutral: "app-btn app-btn-secondary",
+    primary: "app-btn app-btn-primary",
+    success: "app-btn app-btn-primary",
+    warning: "app-btn app-btn-secondary",
+    danger: "app-btn app-btn-secondary",
   };
 
   const defaultOptions = {
@@ -163,7 +160,6 @@
     }
 
     if (state.sourceContainer) {
-      state.sourceContainer.classList.add("hidden");
       state.sourceContainer.setAttribute("aria-hidden", "true");
     }
   }
@@ -193,7 +189,6 @@
     };
 
     if (sourceContainer) {
-      sourceContainer.classList.remove("hidden");
       sourceContainer.removeAttribute("aria-hidden");
     }
 
@@ -278,6 +273,13 @@
     }
   }
 
+  function notifyCloseWaiters(action) {
+    const waiters = closeWaiters.splice(0, closeWaiters.length);
+    waiters.forEach(function (resolve) {
+      resolve(action);
+    });
+  }
+
   function closeModal(action) {
     if (!activeState) {
       return;
@@ -286,7 +288,7 @@
     const state = activeState;
     activeState = null;
 
-    root.classList.add("pointer-events-none", "opacity-0");
+    root.classList.remove("is-open");
     root.setAttribute("aria-hidden", "true");
     document.body.classList.remove("overflow-hidden");
     panel.removeAttribute("aria-busy");
@@ -312,6 +314,7 @@
     }
 
     state.resolve(action);
+    notifyCloseWaiters(action);
     window.setTimeout(processQueue, 0);
   }
 
@@ -463,7 +466,7 @@
     applyState(activeState);
     cleanupListeners = bindListeners(activeState.options);
 
-    root.classList.remove("pointer-events-none", "opacity-0");
+    root.classList.add("is-open");
     root.setAttribute("aria-hidden", "false");
     document.body.classList.add("overflow-hidden");
     window.setTimeout(function () {
@@ -489,8 +492,12 @@
   }
 
   function alert(options) {
+    if (window.StatusModal && typeof window.StatusModal.alert === "function") {
+      return window.StatusModal.alert(options);
+    }
+    const opts = options || {};
     return open({
-      ...options,
+      ...opts,
       showOk: true,
       showCancel: false,
       showSubmit: false,
@@ -508,14 +515,26 @@
     });
   }
 
+  /**
+   * @returns {Promise<string>}
+   */
+  function close() {
+    return new Promise(function (resolve) {
+      if (!activeState) {
+        resolve("closed");
+        return;
+      }
+      closeWaiters.push(resolve);
+      closeModal("closed");
+    });
+  }
+
   window.GlobalModal = {
     open: open,
     alert: alert,
     confirm: confirm,
     setLoading: setLoading,
-    close: function () {
-      closeModal("closed");
-    },
+    close: close,
   };
 
   function messageConfig(message) {
@@ -554,13 +573,23 @@
         text: node.textContent || "",
       };
       const config = messageConfig(message);
-      alert({
-        title: config.title,
-        heading: config.heading,
-        body: toSafeText(message && message.text),
-        okText: "Close",
-        okColor: config.okColor,
-      });
+      if (window.StatusModal && typeof window.StatusModal.alert === "function") {
+        window.StatusModal.alert({
+          title: config.title,
+          heading: config.heading,
+          body: toSafeText(message && message.text),
+          okText: "Close",
+          okColor: config.okColor,
+        });
+      } else {
+        alert({
+          title: config.title,
+          heading: config.heading,
+          body: toSafeText(message && message.text),
+          okText: "Close",
+          okColor: config.okColor,
+        });
+      }
     });
   }
 

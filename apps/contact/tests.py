@@ -47,7 +47,12 @@ class ContactViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(mail.outbox[0].to, ["owner@example.com"])
+        self.assertEqual(mail.outbox[0].reply_to, ["raju@example.com"])
         self.assertEqual(mail.outbox[1].to, ["raju@example.com"])
+        self.assertIn("Thank you for reaching out.", mail.outbox[1].body)
+        self.assertIn("as soon as possible", mail.outbox[1].body)
+        self.assertIn("Thanks,\nRaju Jha", mail.outbox[1].body)
+        self.assertNotIn("— Raju Jha", mail.outbox[1].body)
 
     @override_settings(
         EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",

@@ -1,0 +1,70 @@
+<div id="docs-sidebar-backdrop" class="docs-sidebar-backdrop" aria-hidden="true"></div>
+
+<aside id="docs-sidebar" class="docs-sidebar" aria-label="Site navigation">
+    <div class="docs-sidebar-inner">
+        <header class="docs-sidebar-header">
+            <div class="docs-sidebar-header-row">
+                <div class="docs-sidebar-identity">
+                    <a href="/" class="docs-site-name">{{ site.name }}</a>
+                    <p class="docs-site-title">{{ site.title }}</p>
+                </div>
+                <button type="button" id="mobile-sidebar-close" class="docs-sidebar-close" aria-label="Close navigation">
+                    Close
+                </button>
+            </div>
+        </header>
+
+        <button type="button" class="docs-palette-trigger" data-command-palette-open aria-label="Open command palette">
+            <span class="docs-palette-trigger-label">Search</span>
+            <kbd class="docs-kbd">⌘K</kbd>
+        </button>
+
+        <nav class="docs-nav" id="docs-nav" aria-label="Sections">
+            <ul class="docs-nav-list">
+                {% for item in site.navigation %}
+                    <li>
+                        {% if item.id == "contact" %}
+                            <a href="#" class="docs-nav-link" data-contact-nav>Contact</a>
+                        {% else %}
+                            <a
+                                href="/#{{ item.id }}"
+                                class="docs-nav-link"
+                                data-section-nav="{{ item.id }}"
+                            >{{ item.label }}</a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </nav>
+
+        <div class="docs-sidebar-footer">
+            <div class="docs-social-links">
+                {% for link in site.social_links %}
+                    <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" class="docs-social-link">{{ link.label }}</a>
+                {% endfor %}
+            </div>
+            <div class="theme-switch docs-theme-switch" role="group" aria-label="Theme">
+                <button type="button" data-theme-option="light" class="theme-option" aria-label="Light theme" title="Light theme">
+                    <span class="sr-only">Light theme</span>
+                    <svg viewBox="0 0 24 24" class="theme-icon" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path stroke-linecap="round" d="M12 2.5v2.2M12 19.3v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"></path>
+                    </svg>
+                </button>
+                <button type="button" data-theme-option="dark" class="theme-option" aria-label="Dark theme" title="Dark theme">
+                    <span class="sr-only">Dark theme</span>
+                    <svg viewBox="0 0 24 24" class="theme-icon" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 14.7A8.5 8.5 0 0 1 9.3 4a8.5 8.5 0 1 0 10.7 10.7Z"></path>
+                    </svg>
+                </button>
+                <button type="button" data-theme-option="system" class="theme-option" aria-label="System theme" title="System theme">
+                    <span class="sr-only">System theme</span>
+                    <svg viewBox="0 0 24 24" class="theme-icon" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                        <rect x="3.5" y="4.5" width="17" height="12" rx="2"></rect>
+                        <path stroke-linecap="round" d="M8 19.5h8M12 16.5v3"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</aside>

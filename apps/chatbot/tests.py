@@ -38,12 +38,11 @@ class ChatbotApiTests(TestCase):
         service = PortfolioChatService()
         reply = service.generate_reply("What is Raju's backend and full-stack skill set?")
 
-        self.assertIn("Python", reply)
-        self.assertIn("Django", reply)
-        self.assertIn("Java", reply)
-        self.assertIn("Spring Boot", reply)
+        self.assertIn("Node.js", reply)
+        self.assertIn("TypeScript", reply)
         self.assertIn("React", reply)
         self.assertIn("Next.js", reply)
+        self.assertIn("Express.js", reply)
 
     def test_chatbot_architecture_and_ai_reply_is_complete(self):
         service = PortfolioChatService()
@@ -113,13 +112,13 @@ class ResumeSecretStrictTests(TestCase):
         os.environ.update(self._env)
 
     def test_exact_secret_returns_resume_url(self):
+        expected = f"You can view my resume here:\n\n[Resume PDF]({self.expected_link})"
         reply = try_resume_access_reply("RESUME-LINK")
-        self.assertIsNotNone(reply)
-        self.assertIn(self.expected_link, reply)
+        self.assertEqual(reply, expected)
 
         service = PortfolioChatService()
         service_reply = service.generate_reply("RESUME-LINK")
-        self.assertIn(self.expected_link, service_reply)
+        self.assertEqual(service_reply, expected)
 
     def test_variations_do_not_return_resume_url(self):
         failures = (

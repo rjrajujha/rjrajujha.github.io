@@ -3,9 +3,24 @@
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Personal portfolio of Raju Jha, a backend-focused software engineer specializing in Python, Django, and AI integrations.">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="description" content="{{ page_description }}">
+    <meta name="author" content="{{ site.name }}">
     <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="canonical" href="{{ canonical_url }}">
+
+    <meta property="og:title" content="{{ page_title }}">
+    <meta property="og:description" content="{{ page_description }}">
+    <meta property="og:type" content="{{ og_type }}">
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta property="og:site_name" content="{{ site.name }}">
+
+    <meta name="twitter:card" content="{{ twitter_card }}">
+    <meta name="twitter:title" content="{{ page_title }}">
+    <meta name="twitter:description" content="{{ page_description }}">
+
+    <script type="application/ld+json">{{ structured_data_json|safe }}</script>
+
     <script>
         (function () {
             try {
@@ -21,68 +36,50 @@
             }
         })();
     </script>
-    <title>{% block title %}Raju Jha | Software Engineer{% endblock %}</title>
+
+    <title>{% block title %}{{ page_title }}{% endblock %}</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
     <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
     <link rel="icon" href="{% static 'favicon/favicon.ico' %}">
     <link rel="manifest" href="{% static 'manifest.webmanifest' %}">
-    <meta name="application-name" content="Raju Jha Portfolio">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0f172a">
-    <style>
-        [data-theme-option] svg {
-            width: 1rem;
-            height: 1rem;
-            flex: none;
-            display: block;
-        }
-    </style>
+    <meta name="application-name" content="{{ site.name }}">
+    <meta name="theme-color" content="#09090b">
+
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_head %}{% endblock %}
 </head>
-<body class="font-body selection:bg-amber-200 selection:text-slate-900 dark:selection:bg-emerald-300 dark:selection:text-slate-950">
-    <div class="relative min-h-screen overflow-x-clip">
-        <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-            <div class="absolute left-1/2 top-0 h-[32rem] w-[min(100%,48rem)] -translate-x-1/2 rounded-full bg-emerald-100/80 blur-3xl dark:bg-emerald-950/50"></div>
-        </div>
-
-        {% include 'partials/navbar.html' %}
-
-        {% if messages %}
-            <section id="flash-messages-fallback" class="page-container mt-4">
-                {% for message in messages %}
-                    <div
-                        class="mb-3 rounded-xl border border-slate-300/80 bg-white/80 px-4 py-3 text-sm shadow-sm dark:border-slate-700 dark:bg-slate-900/80 {{ message.tags|default:'' }}"
-                        data-flash-message="true"
-                        data-level="{{ message.level_tag|default:'' }}"
-                        data-tags="{{ message.tags|default:'' }}"
-                    >
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </section>
-        {% endif %}
-
-        <main>
-            {% block content %}{% endblock %}
-        </main>
-
-        {% include 'partials/footer.html' %}
-        <div id="contact-modal-source" class="hidden" aria-hidden="true">
-            {% include 'partials/contact_form.html' %}
-        </div>
-        {% include 'partials/chatbot_widget.html' %}
-        {% include 'partials/global_modal.html' %}
+<body class="font-body antialiased">
+    <div id="app-shell" class="docs-shell">
+        {% block body %}{% endblock %}
     </div>
 
+    {% include 'partials/command_palette.html' %}
+
+    {% include 'partials/global_modal.html' %}
+    {% include 'partials/status_modal.html' %}
+    {% include 'partials/chatbot_widget.html' %}
+
+    <div id="contact-modal-source" class="contact-modal-source" aria-hidden="true">
+        {% include 'partials/contact_form.html' %}
+    </div>
+
+    <script id="search-index-data" type="application/json">{{ search_index_json|safe }}</script>
+    <script id="site-config-data" type="application/json">{{ site_config_json|safe }}</script>
     <script src="{% static 'js/theme.js' %}" defer></script>
+    <script src="{% static 'js/status-modal.js' %}" defer></script>
     <script src="{% static 'js/modal.js' %}" defer></script>
+    <script src="{% static 'js/docs.js' %}" defer></script>
+    <script src="{% static 'js/mobile-header.js' %}" defer></script>
+    <script src="{% static 'js/command-palette.js' %}" defer></script>
     <script src="{% static 'js/site.js' %}" defer></script>
     <script src="{% static 'js/chatbot.js' %}" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js" defer></script>
+    <script src="{% static 'js/mermaid-init.js' %}" defer></script>
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

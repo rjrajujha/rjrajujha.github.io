@@ -1,4 +1,4 @@
-<section id="chatbot-root" class="chat-root" aria-label="Portfolio assistant">
+<section id="chatbot-root" class="chat-root" aria-label="Ask Raju assistant">
     <button
         id="chatbot-toggle"
         type="button"
@@ -6,26 +6,27 @@
         aria-controls="chatbot-panel"
         class="chat-fab"
     >
-        <svg viewBox="0 0 24 24" class="h-5 w-5 shrink-0 fill-none stroke-current stroke-2" aria-hidden="true">
+        <svg viewBox="0 0 24 24" class="chat-fab-icon" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 16.5a2.5 2.5 0 0 1-2.5 2.5H7l-4 3.5V6.5A2.5 2.5 0 0 1 5.5 4h15A2.5 2.5 0 0 1 21 6.5v10Z"></path>
         </svg>
-        <span class="hidden sm:inline">Ask Raju</span>
+        <span class="chat-fab-label">Ask Raju</span>
     </button>
 
     <div
         id="chatbot-panel"
-        class="chat-panel hidden"
+        class="chat-panel is-closed"
         role="dialog"
         aria-modal="true"
         aria-labelledby="chatbot-title"
+        aria-hidden="true"
     >
-        <header class="flex shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
-            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white" aria-hidden="true">RJ</span>
-            <div class="min-w-0 flex-1">
-                <h2 id="chatbot-title" class="truncate text-base font-semibold text-slate-900 dark:text-slate-100">Ask Raju</h2>
-                <p class="truncate text-xs text-slate-500 dark:text-slate-400">Projects, stack, and hiring context</p>
+        <header class="chat-header">
+            <span class="chat-avatar" aria-hidden="true">RJ</span>
+            <div class="chat-header-text">
+                <h2 id="chatbot-title" class="chat-title">Ask Raju</h2>
+                <p class="chat-subtitle">Projects, stack, and hiring context</p>
             </div>
-            <div class="flex shrink-0 items-center gap-0.5">
+            <div class="chat-header-actions">
                 <button
                     id="chatbot-clear"
                     type="button"
@@ -33,26 +34,26 @@
                     aria-label="Clear conversation"
                     title="Clear conversation"
                 >
-                    <svg viewBox="0 0 24 24" class="h-[18px] w-[18px] fill-none stroke-current stroke-[1.75]" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" class="chat-icon" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7h14Z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10 11v5M14 11v5"></path>
                     </svg>
                 </button>
                 <button id="chatbot-close" type="button" class="chat-icon-btn" aria-label="Close chat">
-                    <svg viewBox="0 0 24 24" class="h-[18px] w-[18px] fill-none stroke-current stroke-[1.75]" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" class="chat-icon" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6 6 18"></path>
                     </svg>
                 </button>
             </div>
         </header>
 
-        <div class="flex min-h-0 flex-1 flex-col bg-white dark:bg-slate-950">
+        <div class="chat-body">
             <div id="chatbot-messages" class="chat-messages" role="log" aria-live="polite" aria-atomic="false" tabindex="0" aria-label="Chat messages">
                 <div id="chatbot-messages-inner" class="chat-messages-inner">
                     <div id="chatbot-empty-state" class="chat-suggestions">
-                        <p class="text-sm font-medium text-slate-800 dark:text-slate-200">What would you like to know?</p>
-                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Pick a prompt or type your own question.</p>
-                        <div class="mt-4 flex flex-col gap-2" role="group" aria-label="Suggested questions">
+                        <p class="chat-suggestions-title">What would you like to know?</p>
+                        <p class="chat-suggestions-lead">Pick a prompt or type your own question.</p>
+                        <div class="chat-suggestions-list" role="group" aria-label="Suggested questions">
                             <button type="button" class="chat-suggestion" data-chat-suggestion="Tell me about SyncWave">Tell me about SyncWave</button>
                             <button type="button" class="chat-suggestion" data-chat-suggestion="What is your backend stack?">What is your backend stack?</button>
                             <button type="button" class="chat-suggestion" data-chat-suggestion="Are you open to remote backend roles?">Are you open to remote backend roles?</button>
@@ -62,13 +63,13 @@
             </div>
         </div>
 
-        <form id="chatbot-form" class="shrink-0 border-t border-slate-200 bg-white p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-slate-800 dark:bg-slate-950" novalidate>
-            <div class="flex items-end gap-2 rounded-xl bg-slate-100 p-1.5 dark:bg-slate-900">
+        <form id="chatbot-form" class="chat-composer" novalidate>
+            <div class="chat-composer-inner">
                 <label for="chatbot-input" class="sr-only">Message</label>
                 <textarea
                     id="chatbot-input"
-                    class="min-h-10 max-h-28 flex-1 resize-none border-0 bg-transparent px-3 py-2 text-sm leading-relaxed text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:ring-0 dark:text-slate-100 dark:placeholder:text-slate-500"
-                    placeholder="Message Raju’s assistant…"
+                    class="chat-input"
+                    placeholder="Message Raju's assistant…"
                     autocomplete="off"
                     maxlength="1000"
                     rows="1"
@@ -77,10 +78,10 @@
                 <button
                     id="chatbot-send"
                     type="submit"
-                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-400"
+                    class="chat-send-btn"
                     aria-label="Send message"
                 >
-                    <svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current stroke-2" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" class="chat-icon" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0-7 7m7-7 7 7"></path>
                     </svg>
                 </button>

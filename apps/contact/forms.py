@@ -4,7 +4,7 @@ from django import forms
 class ContactForm(forms.Form):
     name = forms.CharField(max_length=120)
     email = forms.EmailField()
-    subject = forms.CharField(max_length=180, initial="Portfolio inquiry", widget=forms.HiddenInput())
+    subject = forms.CharField(max_length=180)
     message = forms.CharField(widget=forms.Textarea)
     company = forms.CharField(required=False, widget=forms.HiddenInput)
 
@@ -16,10 +16,10 @@ class ContactForm(forms.Form):
                 continue
             current = field.widget.attrs.get("class", "")
             field.widget.attrs["class"] = f"{current} {input_classes}".strip()
-        self.fields["subject"].widget.attrs.setdefault("id", "id_contact_subject")
         self.fields["name"].widget.attrs.setdefault("placeholder", "Your name")
         self.fields["email"].widget.attrs.setdefault("placeholder", "you@example.com")
-        self.fields["message"].widget.attrs.setdefault("rows", 4)
+        self.fields["subject"].widget.attrs.setdefault("placeholder", "What is this about?")
+        self.fields["message"].widget.attrs.setdefault("rows", 3)
         self.fields["message"].widget.attrs.setdefault(
             "placeholder",
             "Tell me about your project or role.",

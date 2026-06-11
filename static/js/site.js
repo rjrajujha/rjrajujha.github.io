@@ -1,65 +1,4 @@
 (function () {
-  const menuToggle = document.getElementById("mobile-menu-toggle");
-  const mobileNavPanel = document.getElementById("mobile-nav-panel");
-
-  if (menuToggle && mobileNavPanel) {
-    menuToggle.addEventListener("click", function () {
-      const isOpen = !mobileNavPanel.classList.contains("hidden");
-      mobileNavPanel.classList.toggle("hidden", isOpen);
-      mobileNavPanel.classList.toggle("flex", !isOpen);
-      menuToggle.setAttribute("aria-expanded", String(!isOpen));
-    });
-
-    mobileNavPanel.querySelectorAll("a").forEach(function (link) {
-      link.addEventListener("click", function () {
-        mobileNavPanel.classList.add("hidden");
-        mobileNavPanel.classList.remove("flex");
-        menuToggle.setAttribute("aria-expanded", "false");
-      });
-    });
-  }
-
-  const revealItems = document.querySelectorAll(".reveal");
-  if (revealItems.length) {
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    const observer = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("is-visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        threshold: 0.15,
-      }
-    );
-
-    revealItems.forEach(function (item, index) {
-      if (!prefersReducedMotion) {
-        item.style.setProperty("--reveal-delay", Math.min(index, 3) * 35 + "ms");
-      }
-      observer.observe(item);
-    });
-  }
-
-  function closeMobileNav() {
-    if (!mobileNavPanel || !menuToggle) {
-      return;
-    }
-    mobileNavPanel.classList.add("hidden");
-    mobileNavPanel.classList.remove("flex");
-    menuToggle.setAttribute("aria-expanded", "false");
-  }
-
-  if (mobileNavPanel) {
-    mobileNavPanel.querySelectorAll("[data-open-contact-modal]").forEach(function (trigger) {
-      trigger.addEventListener("click", closeMobileNav);
-    });
-  }
-
   function canRegisterServiceWorker() {
     if (!("serviceWorker" in navigator)) {
       return false;
@@ -114,34 +53,77 @@
 
   registerServiceWorker();
 
+  function isMobileViewport() {
+    return window.matchMedia("(max-width: 1023px)").matches;
+  }
+
+  function getContactForm() {
+    return document.querySelector("#contact-modal-source [data-contact-form='true']");
+  }
+
+  /** @returns {Promise<void>} */
+  async function closeContactModal() {
+    if (window.GlobalModal && typeof window.GlobalModal.close === "function") {
+      await window.GlobalModal.close();
+    }
+    document.body.classList.remove("contact-modal-open");
+  }
+
   function openContactModal() {
-    const form = document.querySelector("#contact-modal-source [data-contact-form='true']");
+    const form = getContactForm();
     if (!form || !window.GlobalModal || typeof window.GlobalModal.open !== "function") {
       return;
     }
 
+    const mobile = isMobileViewport();
     window.GlobalModal.open({
       title: "",
-      heading: "Start a conversation",
+      heading: "Contact",
       body: "",
       contentNode: form,
       showOk: false,
       showCancel: false,
       showSubmit: false,
       showCloseButton: true,
-      size: "md",
+      size: mobile ? "full" : "lg",
       closeOnBackdrop: true,
       closeOnEscape: true,
-      headingClass: "pr-8",
-      panelClass: "max-h-[min(90dvh,40rem)] overflow-y-auto",
-      bodyClass: "mt-4",
+      panelClass: mobile ? "app-modal-panel-sheet" : "app-modal-panel-contact",
+      headingClass: "app-modal-heading-contact",
+      bodyClass: "app-modal-body-contact",
+      onClose: function () {
+        document.body.classList.remove("contact-modal-open");
+      },
+    });
+    document.body.classList.add("contact-modal-open");
+  }
+
+  function showStatusModal(heading, body) {
+    window.GlobalModal.alert({
+      title: "",
+      heading: heading,
+      body: body,
+      bodyClass: "app-modal-body-confirm whitespace-pre-line",
+      panelClass: "app-modal-panel-confirm app-modal-size-md",
+      headingClass: "app-modal-heading-confirm",
+      okText: "Close",
     });
   }
 
-  document.querySelectorAll("[data-open-contact-modal]").forEach(function (trigger) {
+  window.ContactModal = { open: openContactModal, close: closeContactModal };
+
+  document.querySelectorAll("[data-contact-nav], [data-open-contact-modal]").forEach(function (trigger) {
     trigger.addEventListener("click", function (event) {
       event.preventDefault();
       openContactModal();
+      const sidebar = document.getElementById("docs-sidebar");
+      const mobileToggle = document.getElementById("mobile-sidebar-toggle");
+      if (sidebar) {
+        sidebar.classList.remove("is-open");
+      }
+      if (mobileToggle) {
+        mobileToggle.setAttribute("aria-expanded", "false");
+      }
     });
   });
 
@@ -152,11 +134,11 @@
       const params = new URLSearchParams(window.location.search);
       params.delete("open");
       const query = params.toString();
-      window.history.replaceState({}, "", window.location.pathname + (query ? "?" + query : "") + window.location.hash);
+      window.history.replaceState({}, "", window.location.pathname + (query ? "?" + query : ""));
     }
   }
 
-  const contactForm = document.querySelector("[data-contact-form='true']");
+  const contactForm = getContactForm();
   if (!contactForm || !window.fetch || !window.FormData) {
     return;
   }
@@ -171,27 +153,147 @@
   }
 
   const submitButton = contactForm.querySelector("button[type='submit']");
+  const cancelButton = contactForm.querySelector("[data-contact-cancel]");
   if (!submitButton) {
     return;
   }
 
   const defaultSubmitText = submitButton.textContent || "Send Message";
 
-  function composeValidationMessage(errors) {
-    if (!errors || typeof errors !== "object") {
-      return "";
-    }
+  const fieldConfig = {
+    name: {
+      input: contactForm.querySelector("#id_name"),
+      error: contactForm.querySelector("#contact-error-name"),
+      validate: function (value) {
+        const trimmed = value.trim();
+        if (!trimmed) {
+          return "Please enter your name.";
+        }
+        if (trimmed.length < 2) {
+          return "Please enter your full name.";
+        }
+        return "";
+      },
+    },
+    email: {
+      input: contactForm.querySelector("#id_email"),
+      error: contactForm.querySelector("#contact-error-email"),
+      validate: function (value) {
+        const trimmed = value.trim();
+        if (!trimmed) {
+          return "Please enter your email address.";
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+          return "Please enter a valid email address.";
+        }
+        return "";
+      },
+    },
+    subject: {
+      input: contactForm.querySelector("#id_subject"),
+      error: contactForm.querySelector("#contact-error-subject"),
+      validate: function (value) {
+        const trimmed = value.trim();
+        if (!trimmed) {
+          return "Please enter a subject.";
+        }
+        if (trimmed.length < 4) {
+          return "Subject should be at least 4 characters.";
+        }
+        return "";
+      },
+    },
+    message: {
+      input: contactForm.querySelector("#id_message"),
+      error: contactForm.querySelector("#contact-error-message"),
+      validate: function (value) {
+        const trimmed = value.trim();
+        if (!trimmed) {
+          return "Please enter a message.";
+        }
+        if (trimmed.split(/\s+/).filter(Boolean).length < 5) {
+          return "Please include at least 5 words in your message.";
+        }
+        return "";
+      },
+    },
+  };
 
-    const lines = [];
-    Object.keys(errors).forEach(function (field) {
-      const fieldErrors = Array.isArray(errors[field]) ? errors[field] : [];
-      if (!fieldErrors.length) {
+  function clearFieldError(fieldName) {
+    const field = fieldConfig[fieldName];
+    if (!field || !field.input || !field.error) {
+      return;
+    }
+    field.error.textContent = "";
+    field.error.hidden = true;
+    field.input.removeAttribute("aria-invalid");
+    field.input.removeAttribute("aria-describedby");
+    const wrapper = field.input.closest("[data-contact-field]");
+    if (wrapper) {
+      wrapper.classList.remove("has-error");
+    }
+  }
+
+  function clearAllErrors() {
+    Object.keys(fieldConfig).forEach(clearFieldError);
+  }
+
+  function showFieldError(fieldName, message) {
+    const field = fieldConfig[fieldName];
+    if (!field || !field.input || !field.error) {
+      return;
+    }
+    field.error.textContent = message;
+    field.error.hidden = false;
+    field.input.setAttribute("aria-invalid", "true");
+    field.input.setAttribute("aria-describedby", field.error.id);
+    const wrapper = field.input.closest("[data-contact-field]");
+    if (wrapper) {
+      wrapper.classList.add("has-error");
+    }
+  }
+
+  function validateContactForm() {
+    clearAllErrors();
+    let firstInvalid = null;
+    let valid = true;
+
+    Object.keys(fieldConfig).forEach(function (fieldName) {
+      const field = fieldConfig[fieldName];
+      if (!field.input) {
         return;
       }
-      const label = field === "__all__" ? "Form" : field.charAt(0).toUpperCase() + field.slice(1);
-      lines.push(label + ": " + fieldErrors.join(", "));
+      const message = field.validate(field.input.value || "");
+      if (message) {
+        showFieldError(fieldName, message);
+        valid = false;
+        if (!firstInvalid) {
+          firstInvalid = field.input;
+        }
+      }
     });
-    return lines.join("\n");
+
+    if (firstInvalid) {
+      firstInvalid.focus();
+    }
+    return valid;
+  }
+
+  Object.keys(fieldConfig).forEach(function (fieldName) {
+    const field = fieldConfig[fieldName];
+    if (!field.input) {
+      return;
+    }
+    field.input.addEventListener("input", function () {
+      clearFieldError(fieldName);
+    });
+  });
+
+  if (cancelButton) {
+    cancelButton.addEventListener("click", function () {
+      clearAllErrors();
+      void closeContactModal();
+    });
   }
 
   async function submitWithAjax() {
@@ -213,82 +315,80 @@
     }
 
     if (response.ok && data.success) {
-      contactForm.reset();
-      return {
-        ok: true,
-        message: data.message || "Your message was sent successfully.",
-      };
+      return { ok: true };
     }
 
     return {
       ok: false,
-      message: data.message || "We could not send your message. Please try again.",
+      message: data.message || "",
       errors: data.errors || {},
+      status: response.status,
     };
+  }
+
+  function applyServerErrors(errors) {
+    clearAllErrors();
+    let firstInvalid = null;
+
+    Object.keys(errors).forEach(function (fieldName) {
+      if (fieldName === "__all__") {
+        return;
+      }
+      const messages = errors[fieldName];
+      const message = Array.isArray(messages) ? messages[0] : String(messages || "");
+      if (!message) {
+        return;
+      }
+      showFieldError(fieldName, message);
+      const field = fieldConfig[fieldName];
+      if (field && field.input && !firstInvalid) {
+        firstInvalid = field.input;
+      }
+    });
+
+    if (firstInvalid) {
+      firstInvalid.focus();
+    }
   }
 
   contactForm.addEventListener("submit", async function (event) {
     event.preventDefault();
-    const formInContactModal = Boolean(document.getElementById("global-modal-body")?.contains(contactForm));
+
+    if (!validateContactForm()) {
+      return;
+    }
 
     submitButton.disabled = true;
     submitButton.textContent = "Sending...";
 
-    if (!formInContactModal) {
-      window.GlobalModal.open({
-        title: "Contact",
-        heading: "Sending message...",
-        body: "Please wait while your message is being submitted.",
-        showOk: false,
-        showCancel: false,
-        showSubmit: false,
-        closeOnBackdrop: false,
-        closeOnEscape: false,
-      });
-    }
-
     try {
       const result = await submitWithAjax();
-      if (!formInContactModal) {
-        window.GlobalModal.close();
-      }
 
       if (result.ok) {
         contactForm.reset();
-        if (formInContactModal) {
-          window.GlobalModal.close();
-        }
-        window.GlobalModal.alert({
-          title: "Contact",
-          heading: "Message sent",
-          body: result.message,
-          okColor: "success",
-          okText: "Close",
-        });
+        clearAllErrors();
+        await closeContactModal();
+        showStatusModal(
+          "Message Sent",
+          "Thanks for reaching out.\n\nYour message has been successfully submitted and a confirmation email has been sent."
+        );
         return;
       }
 
-      const validationMessage = composeValidationMessage(result.errors);
-      const fullMessage = validationMessage ? result.message + "\n\n" + validationMessage : result.message;
-      window.GlobalModal.alert({
-        title: "Contact",
-        heading: "Could not send message",
-        body: fullMessage,
-        bodyClass: "whitespace-pre-line",
-        okColor: "warning",
-        okText: "Review",
-      });
-    } catch (error) {
-      if (!formInContactModal) {
-        window.GlobalModal.close();
+      if (result.status === 400 && result.errors && Object.keys(result.errors).length) {
+        applyServerErrors(result.errors);
+        return;
       }
-      window.GlobalModal.alert({
-        title: "Contact",
-        heading: "Temporary issue",
-        body: "We could not submit your message right now. Please try again in a moment.",
-        okColor: "warning",
-        okText: "Close",
-      });
+
+      showStatusModal(
+        "Unable to Send Message",
+        "Something went wrong while sending your message.\n\nPlease try again in a few moments."
+      );
+    } catch (error) {
+      showStatusModal(
+        "Unable to Send Message",
+        "Something went wrong while sending your message.\n\nPlease try again in a few moments."
+      );
     } finally {
       submitButton.disabled = false;
       submitButton.textContent = defaultSubmitText;

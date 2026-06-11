@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block body %}
+{% include 'partials/docs_sidebar.html' %}
+{% include 'partials/docs_mobile_header.html' %}
+
+<main id="docs-content" class="docs-content">
+    <article class="docs-article">
+        {% block docs_content %}{% endblock %}
+    </article>
+
+    {% include 'partials/docs_footer.html' %}
+</main>
+{% endblock %}

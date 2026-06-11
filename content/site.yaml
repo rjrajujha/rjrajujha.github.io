@@ -1,0 +1,42 @@
+name: Raju Jha
+title: Software Engineer
+location: Bihar, India
+domain: rjrajujha.github.io
+domain_url: https://rjrajujha.github.io
+
+social_links:
+  - label: GitHub
+    url: https://github.com/rjrajujha
+  - label: LinkedIn
+    url: https://linkedin.com/in/rjrajujha
+
+navigation:
+  - id: about
+    label: About
+    file: about.md
+  - id: experience
+    label: Experience
+    file: experience.md
+  - id: projects
+    label: Projects
+    file: projects.md
+  - id: opensource
+    label: Open Source
+    file: opensource.md
+  - id: skills
+    label: Skills
+    file: skills.md
+  - id: uses
+    label: Uses
+    file: uses.md
+  - id: contact
+    label: Contact
+    file: contact.md
+
+seo:
+  title: Raju Jha · Software Engineer
+  description: >-
+    Engineering profile of Raju Jha — backend systems, full-stack applications,
+    automation platforms, and developer tooling with Node.js, TypeScript, and React.
+  og_type: profile
+  twitter_card: summary_large_image

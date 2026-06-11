@@ -2,50 +2,58 @@ from __future__ import annotations
 
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
+from django.views.decorators.csrf import requires_csrf_token
+
+from apps.core.markdown_loader import load_site_context
+from apps.core.page_context import build_site_page_context
 
 
 ERROR_CONFIG: dict[int, dict[str, str]] = {
     400: {
         "title": "Bad Request",
-        "heading": "Request could not be processed",
-        "description": "The request appears malformed or incomplete. Please retry from a valid page.",
-        "hint": "If this keeps happening, refresh the page and submit again.",
+        "heading": "Bad request",
+        "description": "The request could not be processed.",
+        "hint": "Please refresh the page and try again.",
     },
     403: {
         "title": "Forbidden",
         "heading": "Access denied",
         "description": "You do not have permission to access this resource.",
-        "hint": "Check your account permissions or return to the homepage.",
+        "hint": "",
     },
     404: {
         "title": "Not Found",
         "heading": "Page not found",
-        "description": "The page you requested does not exist or may have been moved.",
-        "hint": "Use the navigation links or return to the main portfolio page.",
+        "description": "The page you requested does not exist.",
+        "hint": "You may have followed an outdated link or entered an incorrect URL.",
     },
     500: {
         "title": "Server Error",
-        "heading": "Something went wrong on our side",
-        "description": "An unexpected server error occurred while processing your request.",
-        "hint": "Please try again in a moment. If the issue continues, use the contact section.",
+        "heading": "Something went wrong",
+        "description": "An unexpected error occurred.",
+        "hint": "Please try again later.",
     },
 }
 
 
-def _render_error(request: HttpRequest, status_code: int) -> HttpResponse:
+def _render_error(request: HttpRequest, status_code: int, *, hint: str | None = None) -> HttpResponse:
     config = ERROR_CONFIG[status_code]
-    return render(
+    site = load_site_context()
+    context = build_site_page_context(
         request,
-        "errors/error_page.html",
+        page_title=f"{status_code} {config['title']} | {site.name}",
+        page_description=config["description"],
+    )
+    context.update(
         {
             "error_code": status_code,
             "error_title": config["title"],
             "error_heading": config["heading"],
             "error_description": config["description"],
-            "error_hint": config["hint"],
-        },
-        status=status_code,
+            "error_hint": hint if hint is not None else config["hint"],
+        }
     )
+    return render(request, "errors/error_page.html", context, status=status_code)
 
 
 def bad_request(request: HttpRequest, exception: Exception) -> HttpResponse:  # noqa: ARG001
@@ -62,3 +70,12 @@ def page_not_found(request: HttpRequest, exception: Exception) -> HttpResponse: 
 
 def server_error(request: HttpRequest) -> HttpResponse:
     return _render_error(request, 500)
+
+
+@requires_csrf_token
+def csrf_failure(request: HttpRequest, reason: str = "") -> HttpResponse:  # noqa: ARG001
+    return _render_error(
+        request,
+        403,
+        hint="CSRF verification failed. Refresh the page and try again.",
+    )

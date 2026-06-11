@@ -1,80 +1,46 @@
-{% extends 'base.html' %}
+{% extends 'core/docs_layout.html' %}
 
-{% block title %}Raju Jha | Python, Django, AI Engineer{% endblock %}
+{% block docs_content %}
+{% for section in site.sections %}
+    {% if section.id == "projects" %}
+        <section id="{{ section.id }}" class="docs-section" data-section="{{ section.id }}">
+            <header class="docs-section-header">
+                <h1 class="docs-section-title">{{ section.title }}</h1>
+                {% if section.description %}
+                    <p class="docs-section-lead">{{ section.description }}</p>
+                {% endif %}
+            </header>
+            <div class="markdown-body">{{ section.html|safe }}</div>
 
-{% block content %}
-    {% include 'partials/hero.html' %}
-
-    <section id="about" class="section-shell">
-        <div class="section-aside-layout reveal">
-            <h2 class="section-heading lg:pt-0.5">About</h2>
-            <div class="space-y-3">
-                {% for point in about_points %}
-                    <p class="text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ point }}</p>
-                {% endfor %}
-            </div>
-        </div>
-    </section>
-
-    <section id="skills" class="section-shell">
-        <div class="section-intro mb-5">
-            <h2 class="section-heading">Skills</h2>
-            <p class="section-lead">Focused on backend engineering, delivery reliability, and practical AI integrations.</p>
-        </div>
-
-        <div class="grid gap-3 sm:gap-4 md:grid-cols-2">
-            {% for group in skill_groups %}
-                <article class="reveal surface-card-interactive p-4 sm:p-5">
-                    <h3 class="font-heading text-lg font-semibold text-slate-900 dark:text-slate-100">{{ group.title }}</h3>
-                    <div class="mt-2.5 flex flex-wrap gap-2">
-                        {% for item in group.items %}
-                            <span class="tag-pill">{{ item }}</span>
-                        {% endfor %}
-                    </div>
-                </article>
+            {% for project in site.work_projects %}
+                {% include 'partials/project_doc.html' with project=project section_id=section.id %}
             {% endfor %}
-        </div>
-    </section>
+        </section>
+    {% elif section.id == "opensource" %}
+        <section id="{{ section.id }}" class="docs-section" data-section="{{ section.id }}">
+            <header class="docs-section-header">
+                <h1 class="docs-section-title">{{ section.title }}</h1>
+                {% if section.description %}
+                    <p class="docs-section-lead">{{ section.description }}</p>
+                {% endif %}
+            </header>
+            <div class="markdown-body">{{ section.html|safe }}</div>
 
-    <section id="projects" class="section-shell">
-        <div class="mb-5 flex flex-col items-start gap-2.5 sm:flex-row sm:items-end sm:justify-between">
-            <div class="section-intro">
-                <h2 class="section-heading">Featured Projects</h2>
-                <p class="section-lead">Selected work from product engineering, automation, and infrastructure domains.</p>
-            </div>
-            <a href="{% url 'projects:list' %}" class="btn-secondary shrink-0 px-4 py-2 text-sm">View all</a>
-        </div>
-
-        <div class="projects-grid">
-            {% for project in featured_projects %}
-                {% include 'partials/project_card.html' %}
-            {% empty %}
-                <p class="text-sm text-slate-600 dark:text-slate-400">Projects will appear here after initial data seeding.</p>
+            {% for project in site.opensource_projects %}
+                {% include 'partials/project_doc.html' with project=project section_id=section.id %}
             {% endfor %}
-        </div>
-    </section>
-
-    <section id="experience" class="section-shell-last">
-        <div class="section-intro mb-5">
-            <h2 class="section-heading">Experience</h2>
-        </div>
-
-        <div class="grid gap-3 sm:gap-4 lg:grid-cols-2">
-            {% for item in experience_items %}
-                <article class="reveal surface-card-interactive flex h-full flex-col p-4 sm:p-5">
-                    <div>
-                        <h3 class="font-heading text-lg font-semibold text-slate-900 dark:text-slate-100">{{ item.role }} · {{ item.company }}</h3>
-                        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ item.period }}</p>
-                    </div>
-
-                    <p class="mt-2.5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ item.summary }}</p>
-                    <ul class="mt-2.5 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
-                        {% for highlight in item.highlights %}
-                            <li>{{ highlight }}</li>
-                        {% endfor %}
-                    </ul>
-                </article>
-            {% endfor %}
-        </div>
-    </section>
+        </section>
+    {% elif section.id == "contact" %}
+    {% else %}
+        <section id="{{ section.id }}" class="docs-section" data-section="{{ section.id }}">
+            <header class="docs-section-header">
+                <h1 class="docs-section-title">{{ section.title }}</h1>
+                {% if section.description %}
+                    <p class="docs-section-lead">{{ section.description }}</p>
+                {% endif %}
+            </header>
+            <div class="markdown-body">{{ section.html|safe }}</div>
+        </section>
+    {% endif %}
+{% endfor %}
 {% endblock %}
