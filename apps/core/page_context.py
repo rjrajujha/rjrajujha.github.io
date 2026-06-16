@@ -6,7 +6,7 @@ import json
 
 from django.http import HttpRequest
 
-from apps.core.markdown_loader import load_site_context
+from apps.core.markdown_loader import about_intro, experience_items, load_site_context, skill_groups
 
 
 def build_site_page_context(request: HttpRequest, **overrides) -> dict:
@@ -40,6 +40,9 @@ def build_site_page_context(request: HttpRequest, **overrides) -> dict:
                 "description": seo.get("description", ""),
             }
         ),
+        "about_intro": about_intro(),
+        "experience_items": experience_items(),
+        "skill_groups": skill_groups(),
     }
     context.update(overrides)
     return context

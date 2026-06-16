@@ -1,0 +1,8 @@
+<section id="{{ section.id }}" class="portfolio-section portfolio-section--{{ section_kind }}" data-section="{{ section.id }}">
+    <h2 class="portfolio-eyebrow">{{ eyebrow|default:section.title }}</h2>
+    <div class="portfolio-project-stack">
+        {% for project in projects %}
+            {% include 'partials/project_card.html' with project=project section_id=section.id section_kind=section_kind %}
+        {% endfor %}
+    </div>
+</section>

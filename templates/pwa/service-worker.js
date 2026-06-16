@@ -1,4 +1,4 @@
-const CACHE_NAME = "rj-portfolio-shell-v4";
+const CACHE_NAME = "rj-portfolio-shell-v8";
 const OFFLINE_URL = "/offline/";
 const STATIC_ASSETS = [
   OFFLINE_URL,
@@ -6,6 +6,7 @@ const STATIC_ASSETS = [
   "/static/js/theme.js",
   "/static/js/status-modal.js",
   "/static/js/modal.js",
+  "/static/js/portfolio-projects.js",
   "/static/js/docs.js",
   "/static/js/mobile-header.js",
   "/static/js/command-palette.js",

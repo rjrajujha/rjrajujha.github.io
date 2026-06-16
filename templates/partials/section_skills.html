@@ -1,0 +1,15 @@
+<section id="skills" class="portfolio-section portfolio-section-narrow" data-section="skills">
+    <h2 class="portfolio-eyebrow">Skills</h2>
+    <div class="portfolio-skills">
+        {% for group in skill_groups %}
+            <div class="portfolio-skill-row">
+                <span class="portfolio-skill-label">{{ group.title }}</span>
+                <ul class="portfolio-chip-list portfolio-chip-list-inline">
+                    {% for item in group.items %}
+                        <li class="portfolio-chip portfolio-chip-mono">{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+    </div>
+</section>

@@ -30,6 +30,7 @@ EXTERNAL_LINK_RE = re.compile(
     r'<a href="(https?://[^"]+)"([^>]*)>',
     re.IGNORECASE,
 )
+SECTION_BODY_RE = re.compile(r"^## ([^\n]+)\s*\n+(.+?)(?=^## |\Z)", re.MULTILINE | re.DOTALL)
 
 
 @dataclass(frozen=True)
@@ -53,7 +54,9 @@ class RenderedProject:
     repo: str
     demo: str
     stack: tuple[str, ...]
+    outcome: str
     html: str
+    story_html: str
     headings: tuple[dict[str, str], ...] = ()
     raw_text: str = ""
 
@@ -215,6 +218,46 @@ def _strip_html(html: str) -> str:
     return _plain_text(html)
 
 
+def _extract_markdown_section(body: str, heading: str) -> str:
+    target = heading.strip().lower()
+    for match in SECTION_BODY_RE.finditer(body):
+        title = match.group(1).strip().lower()
+        if title == target:
+            text = match.group(2).strip()
+            paragraph = text.split("\n\n", 1)[0].strip()
+            return WHITESPACE_RE.sub(" ", paragraph)
+    return ""
+
+
+def _flatten_story_body(body: str) -> str:
+    sections: list[str] = []
+    for match in SECTION_BODY_RE.finditer(body):
+        content = match.group(2).strip()
+        if content:
+            sections.append(content)
+    if sections:
+        return "\n\n".join(sections)
+    return body.strip()
+
+
+def _remove_markdown_sections(body: str, *headings: str) -> str:
+    skip = {heading.strip().lower() for heading in headings}
+    kept: list[str] = []
+    position = 0
+    for match in SECTION_BODY_RE.finditer(body):
+        prefix = body[position : match.start()]
+        if prefix.strip():
+            kept.append(prefix.rstrip())
+        title = match.group(1).strip().lower()
+        if title not in skip:
+            kept.append(match.group(0).rstrip())
+        position = match.end()
+    tail = body[position:]
+    if tail.strip():
+        kept.append(tail.rstrip())
+    return "\n\n".join(part for part in kept if part.strip())
+
+
 def _load_yaml(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
@@ -225,6 +268,9 @@ def _load_project(path: Path) -> RenderedProject:
     source = path.read_text(encoding="utf-8")
     meta, body = _parse_frontmatter(source)
     html, _ = _render_markdown(body)
+    story_body = _remove_markdown_sections(body, "Outcome", "Tech stack")
+    story_body = _flatten_story_body(story_body)
+    story_html = _render_markdown(story_body)[0] if story_body.strip() else ""
     headings = _extract_headings(html)
     stack = meta.get("stack") or []
     if isinstance(stack, str):
@@ -239,7 +285,9 @@ def _load_project(path: Path) -> RenderedProject:
         repo=str(meta.get("repo", "")),
         demo=str(meta.get("demo", "")),
         stack=tuple(stack),
+        outcome=_extract_markdown_section(body, "Outcome"),
         html=html,
+        story_html=story_html,
         headings=headings,
         raw_text=_strip_html(html),
     )
@@ -431,6 +479,18 @@ def skill_groups() -> list[dict[str, Any]]:
     meta, _ = _parse_frontmatter(path.read_text(encoding="utf-8"))
     groups = meta.get("groups") or []
     return [{"title": g.get("title", ""), "items": list(g.get("items", []))} for g in groups]
+
+
+def about_intro() -> str:
+    path = CONTENT_DIR / "about.md"
+    if not path.exists():
+        return ""
+    meta, _ = _parse_frontmatter(path.read_text(encoding="utf-8"))
+    intro = str(meta.get("intro", "")).strip()
+    if intro:
+        return intro
+    points = about_points()
+    return points[0] if points else ""
 
 
 def about_points() -> list[str]:

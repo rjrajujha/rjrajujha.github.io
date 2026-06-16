@@ -49,3 +49,18 @@ class MarkdownLoaderTests(SimpleTestCase):
         html, _ = _render_markdown("[Example](https://example.com)")
         self.assertIn('target="_blank"', html)
         self.assertIn('rel="noopener noreferrer"', html)
+
+    def test_project_outcome_is_extracted(self):
+        context = load_site_context()
+        syncwave = next(item for item in context.opensource_projects if item.slug == "syncwave")
+        self.assertIn("open-source project", syncwave.outcome.lower())
+
+    def test_project_story_html_omits_duplicate_sections(self):
+        context = load_site_context()
+        syncwave = next(item for item in context.opensource_projects if item.slug == "syncwave")
+        story = syncwave.story_html.lower()
+        self.assertNotIn('id="outcome"', story)
+        self.assertNotIn('id="tech-stack"', story)
+        self.assertNotIn('id="problem"', story)
+        self.assertNotIn('id="solution"', story)
+        self.assertIn("multiple devices", story)

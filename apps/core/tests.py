@@ -18,7 +18,17 @@ class HomePageTests(TestCase):
         response = self.client.get(reverse("core:home"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Raju Jha")
-        self.assertContains(response, 'id="about"')
+        self.assertContains(response, 'id="intro"')
+        self.assertContains(response, "portfolio-project-stack")
+        self.assertContains(response, "portfolio-project-teaser")
+        self.assertContains(response, "portfolio-project-focus")
+        self.assertContains(response, "portfolio-project-stack-line")
+        self.assertNotContains(response, "portfolio-project-status")
+        self.assertNotContains(response, ">Internal<")
+        self.assertNotContains(response, ">Maintained<")
+        self.assertContains(response, "portfolio-chip")
+        self.assertNotContains(response, 'id="about"')
+        self.assertNotContains(response, "stack-deck")
         self.assertNotContains(response, 'data-section="contact"')
         self.assertContains(response, "SyncWave")
         self.assertContains(response, "spa-config-gen")
@@ -66,7 +76,7 @@ class RuntimeErrorPageTests(TestCase):
     def test_error_page_sidebar_links_point_to_home_sections(self):
         response = self.client.get("/missing-page")
         self.assertEqual(response.status_code, 404)
-        for section_id in ("about", "experience", "projects", "opensource", "skills"):
+        for section_id in ("projects", "opensource", "experience", "skills"):
             self.assertContains(response, f'href="/#{section_id}"', status_code=404)
         self.assertContains(response, 'data-contact-nav', status_code=404)
 
@@ -120,7 +130,7 @@ class RuntimeErrorPageTests(TestCase):
         response = self.client.get(reverse("core:service-worker"))
         self.assertEqual(response.status_code, 200)
         body = response.content.decode()
-        self.assertIn("rj-portfolio-shell-v4", body)
+        self.assertIn("rj-portfolio-shell-v8", body)
         self.assertIn("/static/js/docs.js", body)
         self.assertIn("/static/js/chatbot.js", body)
         self.assertEqual(response["Cache-Control"], "no-cache")

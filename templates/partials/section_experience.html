@@ -1,0 +1,23 @@
+<section id="experience" class="portfolio-section portfolio-section-narrow" data-section="experience">
+    <h2 class="portfolio-eyebrow">Experience</h2>
+    <div class="portfolio-experience-list">
+        {% for item in experience_items %}
+            <article class="portfolio-experience-item">
+                <div class="portfolio-experience-heading">
+                    <h3 class="portfolio-experience-company">{{ item.company }}</h3>
+                    <p class="portfolio-experience-meta">{{ item.role }} · {{ item.period }}</p>
+                </div>
+                {% if item.summary %}
+                    <p class="portfolio-experience-summary">{{ item.summary }}</p>
+                {% endif %}
+                {% if item.highlights %}
+                    <ul class="portfolio-experience-highlights">
+                        {% for highlight in item.highlights|slice:":2" %}
+                            <li>{{ highlight }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </article>
+        {% endfor %}
+    </div>
+</section>

@@ -1,46 +1,22 @@
 {% extends 'core/docs_layout.html' %}
 
 {% block docs_content %}
-{% for section in site.sections %}
-    {% if section.id == "projects" %}
-        <section id="{{ section.id }}" class="docs-section" data-section="{{ section.id }}">
-            <header class="docs-section-header">
-                <h1 class="docs-section-title">{{ section.title }}</h1>
-                {% if section.description %}
-                    <p class="docs-section-lead">{{ section.description }}</p>
-                {% endif %}
-            </header>
-            <div class="markdown-body">{{ section.html|safe }}</div>
+<div class="portfolio-page">
+    {% include 'partials/portfolio_intro.html' %}
 
-            {% for project in site.work_projects %}
-                {% include 'partials/project_doc.html' with project=project section_id=section.id %}
-            {% endfor %}
-        </section>
-    {% elif section.id == "opensource" %}
-        <section id="{{ section.id }}" class="docs-section" data-section="{{ section.id }}">
-            <header class="docs-section-header">
-                <h1 class="docs-section-title">{{ section.title }}</h1>
-                {% if section.description %}
-                    <p class="docs-section-lead">{{ section.description }}</p>
-                {% endif %}
-            </header>
-            <div class="markdown-body">{{ section.html|safe }}</div>
-
-            {% for project in site.opensource_projects %}
-                {% include 'partials/project_doc.html' with project=project section_id=section.id %}
-            {% endfor %}
-        </section>
-    {% elif section.id == "contact" %}
-    {% else %}
-        <section id="{{ section.id }}" class="docs-section" data-section="{{ section.id }}">
-            <header class="docs-section-header">
-                <h1 class="docs-section-title">{{ section.title }}</h1>
-                {% if section.description %}
-                    <p class="docs-section-lead">{{ section.description }}</p>
-                {% endif %}
-            </header>
-            <div class="markdown-body">{{ section.html|safe }}</div>
-        </section>
-    {% endif %}
-{% endfor %}
+    {% for section in site.sections %}
+        {% if section.id == "projects" %}
+            {% include 'partials/section_projects.html' with section=section projects=site.work_projects eyebrow="Work" section_kind="work" %}
+        {% elif section.id == "opensource" %}
+            {% include 'partials/section_projects.html' with section=section projects=site.opensource_projects eyebrow="Open Source" section_kind="opensource" %}
+        {% elif section.id == "experience" %}
+            {% include 'partials/section_experience.html' %}
+        {% elif section.id == "skills" %}
+            {% include 'partials/section_skills.html' %}
+        {% elif section.id == "uses" %}
+            {% include 'partials/section_uses.html' with section=section %}
+        {% elif section.id == "contact" %}
+        {% endif %}
+    {% endfor %}
+</div>
 {% endblock %}

@@ -1,29 +1,51 @@
-<article class="reveal surface-card-interactive p-4 sm:p-5">
-    <div class="flex items-start justify-between gap-3">
-        <h3 class="font-heading text-lg font-semibold text-slate-950 dark:text-slate-100">{{ project.title }}</h3>
-        {% if project.impact %}
-            <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">{{ project.impact }}</span>
+<article
+    id="{{ project.slug }}"
+    class="portfolio-project-card portfolio-project-card--{{ section_kind }}"
+    data-project="{{ project.slug }}"
+>
+    <div class="portfolio-project-main">
+        <header class="portfolio-project-head">
+            <div class="portfolio-project-title-row">
+                <h3 class="portfolio-project-title">
+                    <a href="/#{{ section_id }}#{{ project.slug }}" class="portfolio-project-title-link">{{ project.title }}</a>
+                </h3>
+                {% if section_kind == "opensource" %}
+                    {% if project.repo or project.demo %}
+                        <p class="portfolio-project-proof">
+                            {% if project.repo %}
+                                <a href="{{ project.repo }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+                            {% endif %}
+                            {% if project.repo and project.demo %}<span aria-hidden="true"> · </span>{% endif %}
+                            {% if project.demo %}
+                                <a href="{{ project.demo }}" target="_blank" rel="noopener noreferrer">
+                                    {% if "npmjs.com" in project.demo or "npmjs.org" in project.demo %}npm{% else %}Demo{% endif %}
+                                </a>
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </header>
+        {% if project.outcome or project.description %}
+            <p class="portfolio-project-teaser">{{ project.outcome|default:project.description }}</p>
         {% endif %}
-    </div>
-
-    <p class="mt-2.5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ project.headline }}</p>
-    <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{{ project.description }}</p>
-
-    <div class="mt-3 flex flex-wrap gap-2">
-        {% for tech in project.stack_items %}
-            <span class="tag-pill">{{ tech }}</span>
-        {% endfor %}
-    </div>
-
-    <div class="mt-3 flex flex-wrap gap-3 text-sm">
-        {% if project.slug %}
-            <a href="{% url 'projects:detail' project.slug %}" class="link-action">Details</a>
-        {% endif %}
-        {% if project.source_url %}
-            <a href="{{ project.source_url }}" class="link-action" target="_blank" rel="noopener noreferrer">Source</a>
-        {% endif %}
-        {% if project.demo_url %}
-            <a href="{{ project.demo_url }}" class="link-action" target="_blank" rel="noopener noreferrer">Live Demo</a>
-        {% endif %}
+        <div class="portfolio-project-focus">
+            {% if project.description and project.outcome %}
+                <p class="portfolio-project-lead">{{ project.description }}</p>
+            {% endif %}
+            {% if project.outcome %}
+                <p class="portfolio-project-impact">{{ project.outcome }}</p>
+            {% elif project.description %}
+                <p class="portfolio-project-impact">{{ project.description }}</p>
+            {% endif %}
+            {% if project.stack %}
+                <p class="portfolio-project-stack-line">
+                    {% for item in project.stack %}{% if not forloop.first %}<span class="portfolio-project-stack-sep" aria-hidden="true"> · </span>{% endif %}<span>{{ item }}</span>{% endfor %}
+                </p>
+            {% endif %}
+            {% if project.story_html %}
+                <div class="portfolio-project-notes markdown-body markdown-body-compact">{{ project.story_html|safe }}</div>
+            {% endif %}
+        </div>
     </div>
 </article>

@@ -11,18 +11,15 @@ social_links:
     url: https://linkedin.com/in/rjrajujha
 
 navigation:
-  - id: about
-    label: About
-    file: about.md
-  - id: experience
-    label: Experience
-    file: experience.md
   - id: projects
-    label: Projects
+    label: Work
     file: projects.md
   - id: opensource
     label: Open Source
     file: opensource.md
+  - id: experience
+    label: Experience
+    file: experience.md
   - id: skills
     label: Skills
     file: skills.md

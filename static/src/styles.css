@@ -12,7 +12,8 @@
     --text-muted: 113 113 122;
     --accent: 39 39 42;
     --sidebar-width: 16.5rem;
-    --content-max: 50rem;
+    --content-max: 40rem;
+    --portfolio-wide: 72rem;
     --z-sidebar-backdrop: 40;
     --z-mobile-header: 40;
     --z-sidebar: 50;
@@ -161,12 +162,16 @@
     @apply mx-auto w-full max-w-[var(--content-max)] flex-1 px-4 py-8 sm:px-10 sm:py-14;
   }
 
+  .docs-article.portfolio-article {
+    @apply max-w-[var(--portfolio-wide)] py-4 sm:px-8 sm:py-6;
+  }
+
   .docs-section {
-    @apply min-w-0 scroll-mt-6 border-b border-zinc-200 pb-16 pt-3 last:border-b-0 dark:border-zinc-800;
+    @apply min-w-0 scroll-mt-6 pb-8 pt-2;
   }
 
   .docs-section-header {
-    @apply mb-7;
+    @apply mb-5;
   }
 
   .docs-section-title {
@@ -178,29 +183,257 @@
     @apply mt-2.5 text-base leading-relaxed text-zinc-500 dark:text-zinc-400;
   }
 
-  .docs-project {
-    @apply mt-10 scroll-mt-8 border-t border-zinc-100 pt-10 first:mt-8 first:border-t-0 first:pt-0 dark:border-zinc-800/80;
+  .portfolio-page {
+    @apply min-w-0;
   }
 
-  .docs-project-title {
-    @apply text-xl font-semibold tracking-tight;
-    letter-spacing: -0.02em;
+  .portfolio-intro {
+    @apply mb-4 max-w-[var(--content-max)] scroll-mt-6;
   }
 
-  .docs-project-lead {
-    @apply mt-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400;
+  .portfolio-intro-name {
+    @apply text-[1.375rem] font-semibold tracking-tight text-zinc-900 dark:text-zinc-50;
+    letter-spacing: -0.03em;
   }
 
-  .docs-project-stack {
-    @apply mt-3 flex flex-wrap gap-1.5;
+  .portfolio-intro-tagline {
+    @apply mt-2 max-w-[34rem] text-[0.9375rem] leading-[1.65] text-zinc-500 dark:text-zinc-400;
   }
 
-  .docs-tag {
-    @apply rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300;
+  .portfolio-section {
+    @apply scroll-mt-6 pb-8 pt-1;
+  }
+
+  .portfolio-section:first-of-type {
+    @apply pt-0;
+  }
+
+  .portfolio-section-narrow {
+    @apply max-w-[var(--content-max)];
+  }
+
+  .portfolio-eyebrow {
+    @apply mb-5 text-[11px] font-medium uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500;
+  }
+
+  .portfolio-project-stack {
+    @apply flex min-w-0 flex-col;
+  }
+
+  .portfolio-project-card + .portfolio-project-card {
+    @apply border-t border-zinc-100/80 dark:border-zinc-800/50;
+  }
+
+  .portfolio-project-card {
+    @apply scroll-mt-24 border-l border-transparent py-5 pl-4;
+    transition: border-color 0.2s ease;
+  }
+
+  .portfolio-section--opensource .portfolio-project-card {
+    @apply py-4;
+  }
+
+  .portfolio-section--work .portfolio-project-card.is-active {
+    @apply py-7 sm:py-8;
+  }
+
+  .portfolio-section--opensource .portfolio-project-card.is-active {
+    @apply py-5 sm:py-6;
+  }
+
+  .portfolio-project-card.is-active {
+    @apply border-l-zinc-900 pl-5 dark:border-l-zinc-100;
+  }
+
+  .portfolio-project-main {
+    @apply min-w-0 max-w-[42rem];
+  }
+
+  .portfolio-project-title-row {
+    @apply flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4;
+  }
+
+  .portfolio-project-title {
+    @apply text-base font-semibold tracking-tight text-zinc-800 dark:text-zinc-200;
+    letter-spacing: -0.025em;
+  }
+
+  .portfolio-project-card.is-active .portfolio-project-title {
+    @apply text-xl text-zinc-900 dark:text-zinc-50;
+  }
+
+  .portfolio-project-title-link {
+    @apply text-inherit no-underline;
+  }
+
+  .portfolio-project-proof {
+    @apply shrink-0 text-xs text-zinc-400 dark:text-zinc-500;
+  }
+
+  .portfolio-project-proof a {
+    @apply text-zinc-500 no-underline hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300;
+  }
+
+  .portfolio-project-teaser {
+    @apply mt-1 line-clamp-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-500;
+  }
+
+  .portfolio-project-card.is-active .portfolio-project-teaser {
+    @apply hidden;
+  }
+
+  .portfolio-project-focus {
+    @apply hidden;
+  }
+
+  .portfolio-project-card.is-active .portfolio-project-focus {
+    @apply block;
+  }
+
+  .portfolio-project-lead {
+    @apply mt-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-500;
+  }
+
+  .portfolio-project-impact {
+    @apply mt-2 text-[0.9375rem] font-medium leading-relaxed text-zinc-800 dark:text-zinc-200;
+  }
+
+  .portfolio-project-lead + .portfolio-project-impact {
+    @apply mt-1.5 text-sm font-normal text-zinc-700 dark:text-zinc-300;
+  }
+
+  .portfolio-project-stack-line {
+    @apply mt-3 text-xs leading-relaxed text-zinc-400 dark:text-zinc-600;
+  }
+
+  .portfolio-project-stack-sep {
+    @apply text-zinc-300 dark:text-zinc-700;
+  }
+
+  .portfolio-project-notes {
+    @apply mt-6 border-t border-zinc-100 pt-5 dark:border-zinc-800/60;
+  }
+
+  .portfolio-project-notes > :first-child {
+    @apply mt-0;
+  }
+
+  .portfolio-project-notes p {
+    @apply text-sm leading-relaxed text-zinc-600 dark:text-zinc-400;
+  }
+
+  .portfolio-project-notes p + p {
+    @apply mt-2.5;
+  }
+
+  .portfolio-project-notes h2,
+  .portfolio-project-notes h3 {
+    display: none;
+  }
+
+  .portfolio-project-notes .heading-anchor {
+    display: none;
+  }
+
+  .portfolio-project-notes pre {
+    @apply mt-2.5 text-xs;
+  }
+
+  .portfolio-chip-list {
+    @apply mt-2.5 flex flex-wrap gap-1.5;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .portfolio-chip-list-inline {
+    @apply mt-0 flex-1;
+  }
+
+  .portfolio-chip {
+    @apply rounded border border-zinc-200/80 bg-zinc-50/80 px-2 py-0.5 text-[11px] leading-snug text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-500;
+  }
+
+  .portfolio-chip-mono {
+    @apply font-mono;
+  }
+
+  @media (min-width: 900px) {
+    .portfolio-project-stack {
+      @apply max-w-[50rem];
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .portfolio-project-card {
+      transition: none;
+    }
+  }
+
+  .portfolio-experience-list {
+    @apply space-y-5;
+  }
+
+  .portfolio-experience-company {
+    @apply text-sm font-semibold text-zinc-900 dark:text-zinc-100;
+  }
+
+  .portfolio-experience-meta {
+    @apply mt-0.5 text-xs text-zinc-500 dark:text-zinc-500;
+  }
+
+  .portfolio-experience-summary {
+    @apply mt-1.5 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400;
+  }
+
+  .portfolio-experience-highlights {
+    @apply mt-1.5 space-y-1 pl-4 text-sm leading-relaxed text-zinc-500 dark:text-zinc-500;
+    list-style: disc;
+  }
+
+  .portfolio-skills {
+    @apply space-y-2;
+  }
+
+  .portfolio-skill-row {
+    @apply flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-3;
+  }
+
+  .portfolio-skill-label {
+    @apply shrink-0 text-xs font-medium text-zinc-500 dark:text-zinc-500 sm:w-36;
+  }
+
+  .portfolio-uses-details {
+    @apply border-0;
+  }
+
+  .portfolio-uses-summary {
+    @apply cursor-pointer text-sm text-zinc-500 hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300;
+    list-style: none;
+  }
+
+  .portfolio-uses-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .portfolio-uses-details[open] .portfolio-uses-summary {
+    @apply mb-3;
+  }
+
+  .markdown-body-compact > * + * {
+    @apply mt-3;
+  }
+
+  .markdown-body-compact h2 {
+    @apply mt-5 text-base;
+  }
+
+  .markdown-body-compact h3 {
+    @apply mt-4 text-sm;
   }
 
   .docs-footer {
-    @apply mx-auto max-w-[var(--content-max)] border-t border-zinc-200 px-4 py-5 text-center text-xs leading-relaxed text-zinc-400 dark:border-zinc-800 sm:px-10;
+    @apply mx-auto max-w-[var(--portfolio-wide)] border-t border-zinc-200 px-4 py-5 text-center text-xs leading-relaxed text-zinc-400 dark:border-zinc-800 sm:px-10;
     padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0));
   }
 
@@ -935,6 +1168,18 @@
 
     .docs-content {
       @apply ml-0;
+    }
+
+    .docs-article {
+      @apply py-6 sm:py-10;
+    }
+
+    .docs-section {
+      @apply pb-8;
+    }
+
+    .docs-section-header {
+      @apply mb-4;
     }
 
     .app-modal-panel-confirm .app-modal-actions {
