@@ -59,10 +59,37 @@ class SettingsResolverTests(SimpleTestCase):
         ):
             self.assertEqual(project_settings.resolve_chatbot_min_submit_interval(), 8)
 
-    def test_email_use_tls_derivation(self):
-        self.assertFalse(project_settings.derive_email_use_tls(True, 465))
-        self.assertTrue(project_settings.derive_email_use_tls(False, 587))
-        self.assertFalse(project_settings.derive_email_use_tls(False, 465))
+    def test_email_secure_protocol_ssl(self):
+        with patch.dict(project_settings.os.environ, {"EMAIL_SECURE_PROTOCOL": "ssl"}, clear=False):
+            use_ssl, use_tls = project_settings.resolve_email_secure_flags("ssl")
+            self.assertTrue(use_ssl)
+            self.assertFalse(use_tls)
+
+    def test_email_secure_protocol_tls(self):
+        with patch.dict(project_settings.os.environ, {"EMAIL_SECURE_PROTOCOL": "tls"}, clear=False):
+            use_ssl, use_tls = project_settings.resolve_email_secure_flags("tls")
+            self.assertFalse(use_ssl)
+            self.assertTrue(use_tls)
+
+    def test_email_secure_protocol_none(self):
+        with patch.dict(project_settings.os.environ, {"EMAIL_SECURE_PROTOCOL": "none"}, clear=False):
+            use_ssl, use_tls = project_settings.resolve_email_secure_flags("none")
+            self.assertFalse(use_ssl)
+            self.assertFalse(use_tls)
+
+    def test_email_secure_protocol_invalid_falls_back_by_port(self):
+        with patch.dict(
+            project_settings.os.environ,
+            {"EMAIL_SECURE_PROTOCOL": "invalid", "EMAIL_PORT": "587"},
+            clear=False,
+        ):
+            self.assertEqual(project_settings.resolve_email_secure_protocol(587), "tls")
+
+    def test_email_secure_protocol_defaults_by_port(self):
+        with patch.dict(project_settings.os.environ, {}, clear=False):
+            project_settings.os.environ.pop("EMAIL_SECURE_PROTOCOL", None)
+            self.assertEqual(project_settings.resolve_email_secure_protocol(465), "ssl")
+            self.assertEqual(project_settings.resolve_email_secure_protocol(587), "tls")
 
     def test_is_production_defaults_false_in_local_context(self):
         with patch.dict(project_settings.os.environ, {}, clear=False):

@@ -7,7 +7,7 @@ from apps.core.markdown_loader import load_site_context
 
 def load_projects(featured_only: bool = False, limit: int | None = None) -> list[SimpleNamespace]:
     site = load_site_context()
-    projects = site.opensource_projects + site.work_projects
+    projects = site.opensource_projects + site.infrastructure_projects
     if featured_only:
         projects = [item for item in projects if item.category == "opensource"]
     if limit is not None:

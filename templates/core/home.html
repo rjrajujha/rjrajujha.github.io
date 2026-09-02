@@ -5,10 +5,10 @@
     {% include 'partials/portfolio_intro.html' %}
 
     {% for section in site.sections %}
-        {% if section.id == "projects" %}
-            {% include 'partials/section_projects.html' with section=section projects=site.work_projects eyebrow="Work" section_kind="work" %}
-        {% elif section.id == "opensource" %}
+        {% if section.id == "opensource" %}
             {% include 'partials/section_projects.html' with section=section projects=site.opensource_projects eyebrow="Open Source" section_kind="opensource" %}
+        {% elif section.id == "infrastructure" %}
+            {% include 'partials/section_infrastructure.html' with section=section public_projects=site.public_infrastructure_projects personal_projects=site.personal_infrastructure_projects %}
         {% elif section.id == "experience" %}
             {% include 'partials/section_experience.html' %}
         {% elif section.id == "skills" %}

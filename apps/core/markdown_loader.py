@@ -30,6 +30,7 @@ EXTERNAL_LINK_RE = re.compile(
     r'<a href="(https?://[^"]+)"([^>]*)>',
     re.IGNORECASE,
 )
+IMG_TAG_RE = re.compile(r"<img(?![^>]*\bloading=)([^>]*)>", re.IGNORECASE)
 SECTION_BODY_RE = re.compile(r"^## ([^\n]+)\s*\n+(.+?)(?=^## |\Z)", re.MULTILINE | re.DOTALL)
 
 
@@ -49,11 +50,13 @@ class RenderedProject:
     title: str
     slug: str
     category: str
+    infra_group: str
     order: int
     description: str
     repo: str
     demo: str
     stack: tuple[str, ...]
+    endpoints: tuple[dict[str, str], ...]
     outcome: str
     html: str
     story_html: str
@@ -73,7 +76,9 @@ class SiteContext:
     seo: dict[str, str]
     sections: list[RenderedSection] = field(default_factory=list)
     opensource_projects: list[RenderedProject] = field(default_factory=list)
-    work_projects: list[RenderedProject] = field(default_factory=list)
+    public_infrastructure_projects: list[RenderedProject] = field(default_factory=list)
+    personal_infrastructure_projects: list[RenderedProject] = field(default_factory=list)
+    infrastructure_projects: list[RenderedProject] = field(default_factory=list)
     search_index: list[dict[str, str]] = field(default_factory=list)
     resume_url: str = ""
 
@@ -178,6 +183,14 @@ def _apply_external_link_attrs(html: str) -> str:
     return EXTERNAL_LINK_RE.sub(repl, html)
 
 
+def _lazy_load_images(html: str) -> str:
+    def repl(match: re.Match[str]) -> str:
+        attrs = match.group(1)
+        return f'<img loading="lazy" decoding="async"{attrs}>'
+
+    return IMG_TAG_RE.sub(repl, html)
+
+
 def _wrap_tables(html: str) -> str:
     if "<table>" not in html:
         return html
@@ -193,7 +206,7 @@ def _render_markdown(body: str) -> tuple[str, markdown.Markdown]:
         extensions=_markdown_extensions(),
         extension_configs=_markdown_extension_configs(),
     )
-    html = _apply_external_link_attrs(_wrap_tables(md.convert(body)))
+    html = _lazy_load_images(_apply_external_link_attrs(_wrap_tables(md.convert(body))))
     return html, md
 
 
@@ -258,6 +271,12 @@ def _remove_markdown_sections(body: str, *headings: str) -> str:
     return "\n\n".join(part for part in kept if part.strip())
 
 
+def _project_section_id(category: str) -> str:
+    if category == "infrastructure":
+        return "infrastructure"
+    return "opensource"
+
+
 def _load_yaml(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
@@ -268,7 +287,7 @@ def _load_project(path: Path) -> RenderedProject:
     source = path.read_text(encoding="utf-8")
     meta, body = _parse_frontmatter(source)
     html, _ = _render_markdown(body)
-    story_body = _remove_markdown_sections(body, "Outcome", "Tech stack")
+    story_body = _remove_markdown_sections(body, "Outcome", "Tech stack", "Links")
     story_body = _flatten_story_body(story_body)
     story_html = _render_markdown(story_body)[0] if story_body.strip() else ""
     headings = _extract_headings(html)
@@ -276,15 +295,26 @@ def _load_project(path: Path) -> RenderedProject:
     if isinstance(stack, str):
         stack = [item.strip() for item in stack.split(",") if item.strip()]
 
+    endpoints_raw = meta.get("endpoints") or []
+    endpoints: list[dict[str, str]] = []
+    if isinstance(endpoints_raw, list):
+        for entry in endpoints_raw:
+            if isinstance(entry, dict) and entry.get("label") and entry.get("value"):
+                endpoints.append(
+                    {"label": str(entry["label"]), "value": str(entry["value"])}
+                )
+
     return RenderedProject(
         title=str(meta.get("title", path.stem)),
         slug=str(meta.get("slug", path.stem)),
-        category=str(meta.get("category", "work")),
+        category=str(meta.get("category", "opensource")),
+        infra_group=str(meta.get("infra_group", "public")),
         order=int(meta.get("order", 99)),
         description=str(meta.get("description", "")),
         repo=str(meta.get("repo", "")),
         demo=str(meta.get("demo", "")),
         stack=tuple(stack),
+        endpoints=tuple(endpoints),
         outcome=_extract_markdown_section(body, "Outcome"),
         html=html,
         story_html=story_html,
@@ -312,52 +342,35 @@ def _load_section(section_id: str, label: str, filename: str) -> RenderedSection
 
 
 def _build_search_index(
-    sections: list[RenderedSection],
+    navigation: list[dict[str, str]],
     projects: list[RenderedProject],
-    site: dict[str, Any],
 ) -> list[dict[str, str]]:
     index: list[dict[str, str]] = []
 
     def index_text(*parts: str) -> str:
         return _plain_text(" ".join(part for part in parts if part))
 
-    for nav in site.get("navigation", []):
+    for nav in navigation:
         nav_id = nav.get("id", "")
         if nav_id == "contact":
             url = "#open-contact"
+            subtitle = "Open contact form"
         else:
             url = f"/#{nav_id}"
+            subtitle = "Section"
         label = _plain_text(str(nav.get("label", "")))
         index.append(
             {
                 "type": "section",
                 "title": label,
-                "subtitle": "Section" if nav_id != "contact" else "Open contact form",
+                "subtitle": subtitle,
                 "url": url,
                 "text": label,
             }
         )
 
-    for section in sections:
-        for heading in section.headings:
-            if section.id == "contact":
-                heading_url = "#open-contact"
-            else:
-                heading_url = f"/#{section.id}#{heading['id']}"
-            title = _plain_text(heading["title"])
-            section_title = _plain_text(section.title)
-            index.append(
-                {
-                    "type": "heading",
-                    "title": title,
-                    "subtitle": section_title,
-                    "url": heading_url,
-                    "text": index_text(section_title, title),
-                }
-            )
-
     for project in projects:
-        anchor = "opensource" if project.category == "opensource" else "projects"
+        anchor = _project_section_id(project.category)
         title = _plain_text(project.title)
         description = _plain_text(project.description)
         index.append(
@@ -366,29 +379,7 @@ def _build_search_index(
                 "title": title,
                 "subtitle": description,
                 "url": f"/#{anchor}#{project.slug}",
-                "text": index_text(title, description, " ".join(project.stack), project.raw_text),
-            }
-        )
-        for heading in project.headings:
-            heading_title = _plain_text(heading["title"])
-            index.append(
-                {
-                    "type": "heading",
-                    "title": heading_title,
-                    "subtitle": title,
-                    "url": f"/#{anchor}#{project.slug}#{heading['id']}",
-                    "text": index_text(title, heading_title),
-                }
-            )
-
-    for link in site.get("social_links", []):
-        index.append(
-            {
-                "type": "link",
-                "title": link.get("label", ""),
-                "subtitle": "External link",
-                "url": link.get("url", ""),
-                "text": link.get("label", ""),
+                "text": index_text(title, description),
             }
         )
 
@@ -411,11 +402,13 @@ def load_site_context() -> SiteContext:
         key=lambda item: item.order,
     )
     opensource = [project for project in projects if project.category == "opensource"]
-    work = [project for project in projects if project.category == "work"]
+    infrastructure = [project for project in projects if project.category == "infrastructure"]
+    public_infra = [project for project in infrastructure if project.infra_group == "public"]
+    personal_infra = [project for project in infrastructure if project.infra_group != "public"]
 
     resume_url = getattr(settings, "RESUME_URL", "") or ""
 
-    search_index = _build_search_index(sections, projects, site)
+    search_index = _build_search_index(navigation, opensource + infrastructure)
 
     return SiteContext(
         name=str(site.get("name", "Raju Jha")),
@@ -428,7 +421,9 @@ def load_site_context() -> SiteContext:
         seo=dict(site.get("seo", {})),
         sections=sections,
         opensource_projects=opensource,
-        work_projects=work,
+        public_infrastructure_projects=public_infra,
+        personal_infrastructure_projects=personal_infra,
+        infrastructure_projects=infrastructure,
         search_index=search_index,
         resume_url=resume_url,
     )
@@ -442,7 +437,7 @@ def project_catalog() -> list[dict[str, Any]]:
     """Flat project dicts for chatbot and legacy consumers."""
     context = load_site_context()
     catalog: list[dict[str, Any]] = []
-    for project in context.opensource_projects + context.work_projects:
+    for project in context.opensource_projects + context.infrastructure_projects:
         catalog.append(
             {
                 "title": project.title,

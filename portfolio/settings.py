@@ -52,8 +52,25 @@ def resolve_email_backend() -> str:
     return backend or "django.core.mail.backends.smtp.EmailBackend"
 
 
-def derive_email_use_tls(email_use_ssl: bool, email_port: int) -> bool:
-    return (not email_use_ssl) and email_port == 587
+def resolve_email_secure_protocol(email_port: int) -> str:
+    raw = (os.getenv("EMAIL_SECURE_PROTOCOL") or "").strip().lower()
+    if raw in {"ssl", "tls", "none"}:
+        return raw
+    if raw:
+        return "tls" if email_port == 587 else "ssl" if email_port == 465 else "none"
+    if email_port == 465:
+        return "ssl"
+    if email_port == 587:
+        return "tls"
+    return "none"
+
+
+def resolve_email_secure_flags(protocol: str) -> tuple[bool, bool]:
+    if protocol == "ssl":
+        return True, False
+    if protocol == "tls":
+        return False, True
+    return False, False
 
 
 def resolve_contact_min_submit_interval() -> int:
@@ -172,14 +189,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Email settings used by the contact form workflow.
 EMAIL_BACKEND = resolve_email_backend()
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = env_int("EMAIL_PORT", 465, min_value=1)
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", True)
-EMAIL_USE_TLS = derive_email_use_tls(EMAIL_USE_SSL, EMAIL_PORT)
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or "no-reply@localhost"
-EMAIL_TO = os.getenv("EMAIL_TO", EMAIL_HOST_USER)
+EMAIL_HOST = (os.getenv("EMAIL_HOST") or "smtp.gmail.com").strip()
+EMAIL_PORT = env_int("EMAIL_PORT", 587, min_value=1)
+EMAIL_HOST_USER = (os.getenv("EMAIL_HOST_USER") or "").strip()
+EMAIL_HOST_PASSWORD = (os.getenv("EMAIL_HOST_PASSWORD") or "").strip()
+EMAIL_SECURE_PROTOCOL = resolve_email_secure_protocol(EMAIL_PORT)
+EMAIL_USE_SSL, EMAIL_USE_TLS = resolve_email_secure_flags(EMAIL_SECURE_PROTOCOL)
+DEFAULT_FROM_EMAIL = (os.getenv("EMAIL_FROM") or EMAIL_HOST_USER or "no-reply@localhost").strip()
+EMAIL_TO = (os.getenv("EMAIL_TO") or EMAIL_HOST_USER).strip()
 CONTACT_MIN_SUBMIT_INTERVAL_SECONDS = resolve_contact_min_submit_interval()
 
 # AI chatbot provider configuration.

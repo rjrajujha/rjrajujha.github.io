@@ -22,12 +22,6 @@
             <p id="contact-error-email" class="field-error" role="alert" hidden></p>
         </div>
 
-        <div class="contact-field" data-contact-field="subject">
-            <label for="{{ contact_form.subject.id_for_label }}" class="form-label">Subject</label>
-            {{ contact_form.subject }}
-            <p id="contact-error-subject" class="field-error" role="alert" hidden></p>
-        </div>
-
         <div class="contact-field contact-field-message" data-contact-field="message">
             <label for="{{ contact_form.message.id_for_label }}" class="form-label">Message</label>
             {{ contact_form.message }}
@@ -37,6 +31,6 @@
 
     <div class="contact-form-actions">
         <button type="button" class="app-btn app-btn-secondary" data-contact-cancel>Cancel</button>
-        <button id="contact-submit-button" type="submit" class="app-btn app-btn-primary">Send Message</button>
+        <button id="contact-submit-button" type="submit" class="app-btn app-btn-primary">Send</button>
     </div>
 </form>

@@ -4,12 +4,19 @@
     return;
   }
 
-  let activeCard = null;
-  let ticking = false;
+  let expandedCard = null;
 
   function getSectionId(card) {
     const section = card.closest("[data-section]");
     return section ? section.getAttribute("data-section") || section.id : "";
+  }
+
+  function getToggle(card) {
+    return card.querySelector(".portfolio-project-toggle");
+  }
+
+  function getDetails(card) {
+    return card.querySelector(".portfolio-project-details");
   }
 
   function renderMermaidInCard(card) {
@@ -49,72 +56,41 @@
     }
   }
 
-  function setActiveCard(card, options) {
+  function setExpanded(card, expand, options) {
     options = options || {};
-    if (!card) {
+    const toggle = getToggle(card);
+    const details = getDetails(card);
+    if (!toggle || !details) {
       return;
     }
-    if (card === activeCard && !options.force) {
-      return;
+
+    if (expand && expandedCard && expandedCard !== card) {
+      setExpanded(expandedCard, false, { updateHash: false });
     }
 
-    cards.forEach(function (item) {
-      item.classList.toggle("is-active", item === card);
-    });
+    card.classList.toggle("is-expanded", expand);
+    toggle.setAttribute("aria-expanded", expand ? "true" : "false");
+    toggle.querySelector(".portfolio-project-toggle-label").textContent = expand ? "Show less" : "Read more";
+    details.hidden = !expand;
 
-    activeCard = card;
-    renderMermaidInCard(card);
-
-    if (options.updateHash !== false) {
-      updateProjectHash(card, options.replaceHash !== false);
+    if (expand) {
+      expandedCard = card;
+      renderMermaidInCard(card);
+      if (options.updateHash !== false) {
+        updateProjectHash(card, options.replaceHash !== false);
+      }
+    } else if (expandedCard === card) {
+      expandedCard = null;
     }
   }
 
-  function clearActiveCard() {
-    cards.forEach(function (item) {
-      item.classList.remove("is-active");
-    });
-    activeCard = null;
-  }
-
-  function findFocusedCard() {
-    const viewportAnchor = window.innerHeight * 0.4;
-    let focused = null;
-    let closestDistance = Infinity;
-
+  function collapseAll() {
     cards.forEach(function (card) {
-      const rect = card.getBoundingClientRect();
-      if (rect.bottom <= 0 || rect.top >= window.innerHeight) {
-        return;
-      }
-      const anchor = rect.top + Math.min(rect.height * 0.2, 80);
-      const distance = Math.abs(anchor - viewportAnchor);
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        focused = card;
+      if (card.classList.contains("is-expanded")) {
+        setExpanded(card, false, { updateHash: false });
       }
     });
-
-    return focused;
-  }
-
-  function refreshFocus() {
-    const focused = findFocusedCard();
-    if (focused) {
-      setActiveCard(focused, { replaceHash: true });
-      return;
-    }
-    clearActiveCard();
-  }
-
-  function onScroll() {
-    if (!ticking) {
-      ticking = true;
-      window.requestAnimationFrame(function () {
-        refreshFocus();
-        ticking = false;
-      });
-    }
+    expandedCard = null;
   }
 
   function focusProject(card, options) {
@@ -122,9 +98,12 @@
       return;
     }
     options = options || {};
-    setActiveCard(card, { updateHash: options.updateHash !== false, replaceHash: true, force: true });
+    setExpanded(card, true, {
+      updateHash: options.updateHash !== false,
+      replaceHash: true,
+    });
     if (options.scroll !== false) {
-      card.scrollIntoView({ behavior: "smooth", block: "center" });
+      card.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }
 
@@ -140,19 +119,50 @@
     const slug = parts[parts.length - 1];
     const card = document.getElementById(slug);
     if (card && card.classList.contains("portfolio-project-card")) {
-      focusProject(card, { scroll: false, updateHash: false });
+      focusProject(card, { scroll: true, updateHash: false });
     }
   }
 
-  window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", onScroll, { passive: true });
-  window.addEventListener("hashchange", focusFromHash);
+  cards.forEach(function (card) {
+    const toggle = getToggle(card);
+    if (!toggle) {
+      return;
+    }
+    toggle.addEventListener("click", function () {
+      const isExpanded = card.classList.contains("is-expanded");
+      if (isExpanded) {
+        setExpanded(card, false);
+      } else {
+        focusProject(card, { scroll: false });
+      }
+    });
+  });
 
-  refreshFocus();
+  window.addEventListener("hashchange", focusFromHash);
   focusFromHash();
+
+  document.querySelectorAll("[data-copy-endpoint]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      const value = button.getAttribute("data-copy-endpoint") || "";
+      if (!value || !navigator.clipboard) {
+        return;
+      }
+      navigator.clipboard.writeText(value).then(function () {
+        const original = button.textContent;
+        button.textContent = "Copied";
+        button.classList.add("is-copied");
+        window.setTimeout(function () {
+          button.textContent = original;
+          button.classList.remove("is-copied");
+        }, 1400);
+      }).catch(function () {
+        return;
+      });
+    });
+  });
 
   window.PortfolioProjects = {
     focusProject: focusProject,
-    refreshFocus: refreshFocus,
+    collapseAll: collapseAll,
   };
 })();

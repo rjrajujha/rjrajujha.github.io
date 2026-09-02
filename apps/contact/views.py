@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 class ContactPayload:
     name: str
     email: str
-    subject: str
     message: str
     ip_address: str | None
     user_agent: str
@@ -48,7 +47,6 @@ class ContactSubmitView(FormView):
         submission = ContactPayload(
             name=form.cleaned_data["name"],
             email=form.cleaned_data["email"],
-            subject=form.cleaned_data["subject"],
             message=form.cleaned_data["message"],
             ip_address=self._client_ip(),
             user_agent=(self.request.META.get("HTTP_USER_AGENT") or "")[:255],
@@ -127,7 +125,7 @@ class ContactSubmitView(FormView):
         return False
 
     def _send_contact_emails(self, submission: ContactPayload) -> tuple[bool, bool]:
-        notify_subject = f"[Portfolio Contact] {submission.subject}"
+        notify_subject = f"[Portfolio Contact] Message from {submission.name}"
         notify_body = (
             f"Name: {submission.name}\n"
             f"Email: {submission.email}\n"

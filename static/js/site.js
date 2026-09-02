@@ -189,20 +189,6 @@
         return "";
       },
     },
-    subject: {
-      input: contactForm.querySelector("#id_subject"),
-      error: contactForm.querySelector("#contact-error-subject"),
-      validate: function (value) {
-        const trimmed = value.trim();
-        if (!trimmed) {
-          return "Please enter a subject.";
-        }
-        if (trimmed.length < 4) {
-          return "Subject should be at least 4 characters.";
-        }
-        return "";
-      },
-    },
     message: {
       input: contactForm.querySelector("#id_message"),
       error: contactForm.querySelector("#contact-error-message"),

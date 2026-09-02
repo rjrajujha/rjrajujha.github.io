@@ -20,18 +20,24 @@ class HomePageTests(TestCase):
         self.assertContains(response, "Raju Jha")
         self.assertContains(response, 'id="intro"')
         self.assertContains(response, "portfolio-project-stack")
-        self.assertContains(response, "portfolio-project-teaser")
-        self.assertContains(response, "portfolio-project-focus")
-        self.assertContains(response, "portfolio-project-stack-line")
-        self.assertNotContains(response, "portfolio-project-status")
-        self.assertNotContains(response, ">Internal<")
-        self.assertNotContains(response, ">Maintained<")
-        self.assertContains(response, "portfolio-chip")
+        self.assertContains(response, "portfolio-project-summary")
+        self.assertContains(response, "portfolio-project-details")
+        self.assertContains(response, "portfolio-tech-badge")
+        self.assertContains(response, "portfolio-project-toggle")
         self.assertNotContains(response, 'id="about"')
         self.assertNotContains(response, "stack-deck")
         self.assertNotContains(response, 'data-section="contact"')
         self.assertContains(response, "SyncWave")
         self.assertContains(response, "spa-config-gen")
+        self.assertContains(response, "Secure DNS Infrastructure")
+        self.assertContains(response, "Public Infrastructure")
+        self.assertContains(response, "Personal Infrastructure")
+        self.assertContains(response, "portfolio-dns-endpoints")
+        self.assertContains(response, "data-copy-endpoint")
+        self.assertNotContains(response, "Influencer Marketing")
+        self.assertNotContains(response, 'data-section-nav="projects"')
+        self.assertNotContains(response, ">Work<")
+        self.assertNotContains(response, 'id="projects"')
 
     def test_home_includes_search_index(self):
         response = self.client.get(reverse("core:home"))
@@ -76,7 +82,7 @@ class RuntimeErrorPageTests(TestCase):
     def test_error_page_sidebar_links_point_to_home_sections(self):
         response = self.client.get("/missing-page")
         self.assertEqual(response.status_code, 404)
-        for section_id in ("projects", "opensource", "experience", "skills"):
+        for section_id in ("opensource", "infrastructure", "experience", "skills"):
             self.assertContains(response, f'href="/#{section_id}"', status_code=404)
         self.assertContains(response, 'data-contact-nav', status_code=404)
 
@@ -103,7 +109,7 @@ class RuntimeErrorPageTests(TestCase):
         client = Client(enforce_csrf_checks=True)
         response = client.post(
             reverse("contact:submit"),
-            {"name": "Test", "email": "test@example.com", "subject": "Hello", "message": "one two three four five"},
+            {"name": "Test", "email": "test@example.com", "message": "one two three four five"},
             HTTP_X_CSRFTOKEN="invalid-token",
         )
         self.assertEqual(response.status_code, 403)

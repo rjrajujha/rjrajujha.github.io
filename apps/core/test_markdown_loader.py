@@ -50,17 +50,35 @@ class MarkdownLoaderTests(SimpleTestCase):
         self.assertIn('target="_blank"', html)
         self.assertIn('rel="noopener noreferrer"', html)
 
-    def test_project_outcome_is_extracted(self):
-        context = load_site_context()
-        syncwave = next(item for item in context.opensource_projects if item.slug == "syncwave")
-        self.assertIn("open-source project", syncwave.outcome.lower())
-
     def test_project_story_html_omits_duplicate_sections(self):
         context = load_site_context()
         syncwave = next(item for item in context.opensource_projects if item.slug == "syncwave")
         story = syncwave.story_html.lower()
-        self.assertNotIn('id="outcome"', story)
         self.assertNotIn('id="tech-stack"', story)
+        self.assertNotIn('id="links"', story)
         self.assertNotIn('id="problem"', story)
         self.assertNotIn('id="solution"', story)
         self.assertIn("multiple devices", story)
+        self.assertIn("lan-first", story)
+
+    def test_search_index_includes_only_sections_and_projects(self):
+        context = load_site_context()
+        allowed = {"section", "project"}
+        for entry in context.search_index:
+            self.assertIn(entry.get("type"), allowed)
+        self.assertLess(len(context.search_index), 20)
+
+    def test_infrastructure_projects_split_by_group(self):
+        context = load_site_context()
+        self.assertEqual(len(context.public_infrastructure_projects), 3)
+        self.assertEqual(len(context.personal_infrastructure_projects), 2)
+        public_slugs = {p.slug for p in context.public_infrastructure_projects}
+        self.assertIn("secure-dns-infrastructure", public_slugs)
+        personal_slugs = {p.slug for p in context.personal_infrastructure_projects}
+        self.assertIn("personal-cloud-storage", personal_slugs)
+
+    def test_secure_dns_has_copy_endpoints(self):
+        context = load_site_context()
+        dns = next(p for p in context.public_infrastructure_projects if p.slug == "secure-dns-infrastructure")
+        self.assertEqual(len(dns.endpoints), 3)
+        self.assertEqual(dns.endpoints[0]["label"], "DNS-over-HTTPS")

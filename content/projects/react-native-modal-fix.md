@@ -20,12 +20,14 @@ Teams on React Native hit upstream gaps in `react-native-modal`: animation glitc
 
 Drop-in replacement preserving the original component API. Platform-specific branches handle keyboard avoidance, safe-area insets, and enter/exit transitions without forcing consumers to change call sites.
 
-## Tech stack
+## Key Features
 
-TypeScript · React Native · npm (`react-native-modal-fix`) · MIT
+- Drop-in API compatibility with upstream
+- Keyboard avoidance and safe-area handling on iOS
+- Stable animations across React Native minor versions
+- Typed exports with MIT license
 
-## Outcome
+## Links
 
-Maintained compatibility across multiple React Native minor versions with typed exports. Adopted by teams that need production fixes without forking call sites.
-
-[github.com/rjrajujha/react-native-modal-fix](https://github.com/rjrajujha/react-native-modal-fix) · [npm: react-native-modal-fix](https://www.npmjs.com/package/react-native-modal-fix)
+- [GitHub](https://github.com/rjrajujha/react-native-modal-fix)
+- [npm: react-native-modal-fix](https://www.npmjs.com/package/react-native-modal-fix)

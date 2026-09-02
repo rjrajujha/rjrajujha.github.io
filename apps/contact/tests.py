@@ -12,7 +12,6 @@ class ContactFormTests(TestCase):
             data={
                 "name": "Spam",
                 "email": "spam@example.com",
-                "subject": "Spam",
                 "message": "This is a fake message with enough words.",
                 "company": "bot-filled",
             }
@@ -37,7 +36,6 @@ class ContactViewTests(TestCase):
             data={
                 "name": "Raju",
                 "email": "raju@example.com",
-                "subject": "Project Collaboration",
                 "message": "I would like to discuss a backend architecture engagement.",
                 "company": "",
             },
@@ -48,6 +46,7 @@ class ContactViewTests(TestCase):
         self.assertEqual(len(mail.outbox), 2)
         self.assertEqual(mail.outbox[0].to, ["owner@example.com"])
         self.assertEqual(mail.outbox[0].reply_to, ["raju@example.com"])
+        self.assertIn("[Portfolio Contact] Message from Raju", mail.outbox[0].subject)
         self.assertEqual(mail.outbox[1].to, ["raju@example.com"])
         self.assertIn("Thank you for reaching out.", mail.outbox[1].body)
         self.assertIn("as soon as possible", mail.outbox[1].body)
@@ -66,7 +65,6 @@ class ContactViewTests(TestCase):
             data={
                 "name": "Raju",
                 "email": "raju@example.com",
-                "subject": "Backend Collaboration",
                 "message": "I want to discuss an API platform architecture engagement.",
                 "company": "",
             },
@@ -86,7 +84,6 @@ class ContactViewTests(TestCase):
             data={
                 "name": "R",
                 "email": "invalid-email",
-                "subject": "Hi",
                 "message": "Too short",
                 "company": "",
             },
@@ -106,7 +103,6 @@ class ContactViewTests(TestCase):
             data={
                 "name": "Raju",
                 "email": "raju@example.com",
-                "subject": "Backend Collaboration",
                 "message": "I want to discuss an API platform architecture engagement.",
                 "company": "",
             },
@@ -124,7 +120,6 @@ class ContactViewTests(TestCase):
         payload = {
             "name": "Raju",
             "email": "raju@example.com",
-            "subject": "Project Collaboration",
             "message": "I would like to discuss a backend architecture engagement.",
             "company": "",
         }

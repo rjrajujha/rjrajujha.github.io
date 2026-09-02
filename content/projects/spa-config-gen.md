@@ -26,12 +26,14 @@ Node.js CLI with per-server templates that emit copy-paste-ready config snippets
 npx spa-config-gen --server nginx --output nginx.conf
 ```
 
-## Tech stack
+## Key Features
 
-TypeScript · Node.js · npm package · Apache, Nginx, Caddy, Traefik, HAProxy targets
+- Supports Apache, Nginx, Caddy, Traefik, and HAProxy
+- Copy-paste-ready config output
+- Zero production runtime dependency
+- Published on npm with semver releases
 
-## Outcome
+## Links
 
-Published on npm with semver releases. Reduces deployment misconfiguration for SPA routing across common reverse proxies.
-
-[github.com/rjrajujha/spa-config-gen](https://github.com/rjrajujha/spa-config-gen) · [npm: spa-config-gen](https://www.npmjs.com/package/spa-config-gen)
+- [GitHub](https://github.com/rjrajujha/spa-config-gen)
+- [npm: spa-config-gen](https://www.npmjs.com/package/spa-config-gen)

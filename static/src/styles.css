@@ -131,7 +131,11 @@
   }
 
   .docs-nav-link.is-active {
-    @apply bg-zinc-200/80 font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-50;
+    @apply border-l-2 border-zinc-900 bg-zinc-100 pl-[calc(0.625rem-2px)] font-medium text-zinc-900 dark:border-zinc-100 dark:bg-zinc-800 dark:text-zinc-50;
+  }
+
+  .docs-nav-link:focus-visible {
+    @apply outline-none ring-2 ring-zinc-400 ring-offset-1 dark:ring-zinc-500;
   }
 
   .docs-sidebar-footer {
@@ -197,11 +201,11 @@
   }
 
   .portfolio-intro-tagline {
-    @apply mt-2 max-w-[34rem] text-[0.9375rem] leading-[1.65] text-zinc-500 dark:text-zinc-400;
+    @apply mt-2 max-w-[34rem] text-[0.9375rem] leading-[1.7] text-zinc-500 dark:text-zinc-400;
   }
 
   .portfolio-section {
-    @apply scroll-mt-6 pb-8 pt-1;
+    @apply scroll-mt-6 pb-10 pt-2;
   }
 
   .portfolio-section:first-of-type {
@@ -213,105 +217,136 @@
   }
 
   .portfolio-eyebrow {
-    @apply mb-5 text-[11px] font-medium uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500;
+    @apply mb-6 text-[11px] font-medium uppercase tracking-[0.2em] text-zinc-400 dark:text-zinc-500;
   }
 
   .portfolio-project-stack {
-    @apply flex min-w-0 flex-col;
-  }
-
-  .portfolio-project-card + .portfolio-project-card {
-    @apply border-t border-zinc-100/80 dark:border-zinc-800/50;
+    @apply flex min-w-0 flex-col gap-4;
   }
 
   .portfolio-project-card {
-    @apply scroll-mt-24 border-l border-transparent py-5 pl-4;
-    transition: border-color 0.2s ease;
+    @apply scroll-mt-24 rounded-xl border border-neutral-200 bg-white p-5 transition-all duration-200 hover:border-neutral-300 hover:shadow-sm dark:border-neutral-700 dark:bg-neutral-900 dark:hover:border-neutral-500;
   }
 
-  .portfolio-section--opensource .portfolio-project-card {
-    @apply py-4;
-  }
-
-  .portfolio-section--work .portfolio-project-card.is-active {
-    @apply py-7 sm:py-8;
-  }
-
-  .portfolio-section--opensource .portfolio-project-card.is-active {
-    @apply py-5 sm:py-6;
-  }
-
-  .portfolio-project-card.is-active {
-    @apply border-l-zinc-900 pl-5 dark:border-l-zinc-100;
+  .portfolio-project-card.is-expanded {
+    @apply border-neutral-300 shadow-md dark:border-neutral-500;
   }
 
   .portfolio-project-main {
-    @apply min-w-0 max-w-[42rem];
+    @apply min-w-0;
   }
 
   .portfolio-project-title-row {
-    @apply flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4;
+    @apply flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4;
   }
 
   .portfolio-project-title {
-    @apply text-base font-semibold tracking-tight text-zinc-800 dark:text-zinc-200;
+    @apply text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50;
     letter-spacing: -0.025em;
   }
 
-  .portfolio-project-card.is-active .portfolio-project-title {
-    @apply text-xl text-zinc-900 dark:text-zinc-50;
-  }
-
   .portfolio-project-title-link {
-    @apply text-inherit no-underline;
+    @apply text-inherit no-underline hover:underline hover:decoration-zinc-300 hover:underline-offset-2 dark:hover:decoration-zinc-600;
   }
 
-  .portfolio-project-proof {
+  .portfolio-project-links {
     @apply shrink-0 text-xs text-zinc-400 dark:text-zinc-500;
   }
 
-  .portfolio-project-proof a {
-    @apply text-zinc-500 no-underline hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300;
+  .portfolio-project-links a {
+    @apply text-zinc-500 no-underline hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200;
   }
 
-  .portfolio-project-teaser {
-    @apply mt-1 line-clamp-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-500;
+  .portfolio-project-summary {
+    @apply mt-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400;
   }
 
-  .portfolio-project-card.is-active .portfolio-project-teaser {
-    @apply hidden;
+  .portfolio-tech-badges {
+    @apply mt-3 flex flex-wrap gap-1.5;
+    list-style: none;
+    padding: 0;
+    margin-bottom: 0;
   }
 
-  .portfolio-project-focus {
-    @apply hidden;
+  .portfolio-infra-group + .portfolio-infra-group {
+    @apply mt-8;
   }
 
-  .portfolio-project-card.is-active .portfolio-project-focus {
-    @apply block;
+  .portfolio-infra-heading {
+    @apply text-sm font-semibold text-zinc-900 dark:text-zinc-100;
   }
 
-  .portfolio-project-lead {
-    @apply mt-2 text-sm leading-relaxed text-zinc-500 dark:text-zinc-500;
+  .portfolio-infra-lead {
+    @apply mt-1.5 max-w-[42rem] text-sm leading-relaxed text-zinc-500 dark:text-zinc-400;
   }
 
-  .portfolio-project-impact {
-    @apply mt-2 text-[0.9375rem] font-medium leading-relaxed text-zinc-800 dark:text-zinc-200;
+  .portfolio-infra-group .portfolio-project-stack {
+    @apply mt-4;
   }
 
-  .portfolio-project-lead + .portfolio-project-impact {
-    @apply mt-1.5 text-sm font-normal text-zinc-700 dark:text-zinc-300;
+  .portfolio-dns-endpoints {
+    @apply mt-3 space-y-2;
   }
 
-  .portfolio-project-stack-line {
-    @apply mt-3 text-xs leading-relaxed text-zinc-400 dark:text-zinc-600;
+  .portfolio-dns-endpoint-row {
+    @apply grid gap-1 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-center sm:gap-3;
   }
 
-  .portfolio-project-stack-sep {
-    @apply text-zinc-300 dark:text-zinc-700;
+  .portfolio-dns-endpoint-label {
+    @apply text-xs font-medium text-zinc-500 dark:text-zinc-400;
+  }
+
+  .portfolio-dns-endpoint-value {
+    @apply flex min-w-0 items-center gap-2;
+  }
+
+  .portfolio-dns-endpoint-code {
+    @apply min-w-0 flex-1 truncate rounded-md border border-neutral-200 bg-neutral-50 px-2.5 py-1 font-mono text-[11px] text-zinc-700 dark:border-neutral-700 dark:bg-neutral-800/60 dark:text-zinc-300;
+  }
+
+  .portfolio-copy-btn {
+    @apply shrink-0 rounded-md px-2 py-1 text-[11px] font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200;
+  }
+
+  .portfolio-copy-btn.is-copied {
+    @apply text-emerald-600 dark:text-emerald-400;
+  }
+
+  .portfolio-project-toggle {
+    @apply mt-4 inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-neutral-200 bg-transparent px-3 py-1.5 text-xs font-medium text-zinc-600 transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 dark:border-neutral-700 dark:text-zinc-400 dark:hover:border-neutral-500 dark:hover:bg-neutral-800 dark:hover:text-zinc-200 dark:focus-visible:ring-zinc-500;
+  }
+
+  .portfolio-project-toggle-icon {
+    @apply font-mono text-sm leading-none transition-transform duration-200;
+  }
+
+  .portfolio-project-card.is-expanded .portfolio-project-toggle-icon {
+    transform: rotate(45deg);
+  }
+
+  .portfolio-project-details {
+    @apply overflow-hidden;
+    animation: project-details-in 200ms ease;
+  }
+
+  .portfolio-project-details[hidden] {
+    display: none;
+    animation: none;
+  }
+
+  @keyframes project-details-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .portfolio-project-notes {
-    @apply mt-6 border-t border-zinc-100 pt-5 dark:border-zinc-800/60;
+    @apply mt-4 border-t border-neutral-100 pt-4 dark:border-neutral-800;
   }
 
   .portfolio-project-notes > :first-child {
@@ -323,7 +358,7 @@
   }
 
   .portfolio-project-notes p + p {
-    @apply mt-2.5;
+    @apply mt-3;
   }
 
   .portfolio-project-notes h2,
@@ -336,7 +371,16 @@
   }
 
   .portfolio-project-notes pre {
-    @apply mt-2.5 text-xs;
+    @apply mt-3 text-xs;
+  }
+
+  .portfolio-project-notes ul {
+    @apply mt-2 space-y-1 pl-4;
+    list-style: disc;
+  }
+
+  .portfolio-project-notes li {
+    @apply text-sm leading-relaxed text-zinc-600 dark:text-zinc-400;
   }
 
   .portfolio-chip-list {
@@ -360,13 +404,17 @@
 
   @media (min-width: 900px) {
     .portfolio-project-stack {
-      @apply max-w-[50rem];
+      @apply max-w-[52rem];
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .portfolio-project-card {
+    .portfolio-project-card,
+    .portfolio-project-toggle,
+    .portfolio-project-toggle-icon,
+    .portfolio-project-details {
       transition: none;
+      animation: none;
     }
   }
 
@@ -525,12 +573,12 @@
   }
 
   .markdown-body {
-    @apply min-w-0 max-w-full overflow-x-clip text-[0.9375rem] leading-7 text-zinc-700 dark:text-zinc-300;
+    @apply min-w-0 max-w-full overflow-x-clip text-[0.9375rem] leading-[1.75] text-zinc-700 dark:text-zinc-300;
     overflow-wrap: anywhere;
   }
 
   .markdown-body > * + * {
-    @apply mt-4;
+    @apply mt-5;
   }
 
   .markdown-body > :first-child {
@@ -671,9 +719,15 @@
   }
 
   .command-palette {
-    @apply fixed inset-0 flex items-start justify-center px-4 pt-[10vh];
+    @apply fixed inset-0 flex items-start justify-center px-4;
     z-index: var(--z-palette);
-    padding-top: max(10vh, calc(1rem + env(safe-area-inset-top, 0)));
+    padding-top: max(14vh, calc(1.5rem + env(safe-area-inset-top, 0)));
+    opacity: 0;
+    transition: opacity 160ms ease;
+  }
+
+  .command-palette.is-open {
+    opacity: 1;
   }
 
   .command-palette.is-closed {
@@ -681,54 +735,113 @@
   }
 
   .command-palette-backdrop {
-    @apply absolute inset-0 bg-zinc-950/50 backdrop-blur-sm;
+    @apply absolute inset-0 bg-zinc-950/40 backdrop-blur-[2px];
   }
 
   .command-palette-panel {
-    @apply relative z-10 w-full max-w-lg overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900;
-    max-height: min(70dvh, calc(100dvh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 2rem));
+    @apply relative z-10 flex w-full max-w-[640px] flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-900;
+    max-height: min(68dvh, calc(100dvh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 2rem));
+    transform: translateY(-4px);
+    transition: transform 160ms ease;
   }
 
-  .command-palette-input-wrap {
-    @apply flex items-center gap-2 border-b border-zinc-200 px-4 py-3 dark:border-zinc-700;
+  .command-palette.is-open .command-palette-panel {
+    transform: translateY(0);
+  }
+
+  .command-palette-header {
+    @apply flex items-center gap-3 px-4 pb-2 pt-4;
+  }
+
+  .command-palette-search {
+    @apply flex min-w-0 flex-1 items-center gap-2 rounded-lg px-1 py-1;
+  }
+
+  .command-palette-search-icon {
+    @apply h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-500;
   }
 
   .command-palette-input {
-    @apply flex-1 border-0 bg-transparent text-sm text-zinc-900 outline-none ring-0 placeholder:text-zinc-400 dark:text-zinc-100;
+    @apply min-w-0 flex-1 border-0 bg-transparent text-[0.9375rem] text-zinc-900 outline-none ring-0 placeholder:text-zinc-400 focus:ring-0 dark:text-zinc-100 dark:placeholder:text-zinc-500;
   }
 
-  .command-palette-esc {
-    @apply shrink-0;
+  .command-palette-input:focus-visible {
+    @apply outline-none;
+  }
+
+  .command-palette-esc-btn {
+    @apply shrink-0 rounded-md px-2 py-1 font-mono text-[11px] text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-300;
   }
 
   .command-palette-results {
-    @apply max-h-72 overflow-y-auto overscroll-contain py-1.5;
+    @apply max-h-[min(20rem,48dvh)] overflow-y-auto overscroll-contain px-2 pb-1;
     scroll-behavior: auto;
   }
 
   .command-palette-item {
-    @apply mx-1.5 flex min-h-11 cursor-pointer flex-col justify-center gap-0.5 rounded-md border border-transparent px-3 py-2.5 text-sm;
-    scroll-margin-block: 0.5rem;
+    @apply relative mx-0 flex min-h-9 cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-1.5;
+    scroll-margin-block: 0.25rem;
   }
 
   .command-palette-item.is-selected {
-    @apply border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800/90;
+    @apply bg-zinc-100/90 dark:bg-zinc-800/70;
+  }
+
+  .command-palette-item.is-selected::before {
+    content: "";
+    @apply absolute bottom-1 left-0 top-1 w-0.5 rounded-full bg-zinc-900 dark:bg-zinc-100;
+  }
+
+  .command-palette-item-icon {
+    @apply flex h-4 w-4 shrink-0 items-center justify-center text-zinc-400 dark:text-zinc-500;
+  }
+
+  .command-palette-item-icon svg {
+    @apply h-4 w-4;
+  }
+
+  .command-palette-item-body {
+    @apply flex min-w-0 flex-1 flex-col;
   }
 
   .command-palette-empty {
-    @apply px-4 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400;
+    @apply list-none px-4 py-8 text-center;
+  }
+
+  .command-palette-empty-title {
+    @apply text-sm text-zinc-600 dark:text-zinc-300;
+  }
+
+  .command-palette-empty-hint {
+    @apply mt-1 text-xs text-zinc-400 dark:text-zinc-500;
   }
 
   .command-palette-item-title {
-    @apply font-medium text-zinc-900 dark:text-zinc-100;
+    @apply truncate text-sm leading-snug text-zinc-800 dark:text-zinc-100;
   }
 
   .command-palette-item-subtitle {
-    @apply text-xs text-zinc-500 dark:text-zinc-400;
+    @apply truncate text-xs text-zinc-400 dark:text-zinc-500;
+  }
+
+  .command-palette-mark {
+    @apply rounded-sm bg-zinc-200/80 px-0.5 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-50;
+  }
+
+  .command-palette-footer {
+    @apply shrink-0 border-t border-zinc-100 px-4 py-2 dark:border-zinc-800;
   }
 
   .command-palette-hint {
-    @apply border-t border-zinc-200 px-4 py-2 text-[11px] text-zinc-400 dark:border-zinc-700;
+    @apply m-0 text-[11px] text-zinc-400 dark:text-zinc-500;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .command-palette,
+    .command-palette-panel {
+      transition: none;
+      transform: none;
+    }
   }
 
   .theme-switch {
@@ -991,7 +1104,7 @@
   }
 
   .app-modal-panel {
-    @apply relative z-10 flex min-h-0 w-full flex-col rounded-lg border border-zinc-200 bg-white text-left outline-none dark:border-zinc-700 dark:bg-zinc-900;
+    @apply relative z-10 flex min-h-0 w-full flex-col rounded-2xl border border-zinc-200 bg-white text-left outline-none shadow-xl dark:border-zinc-700 dark:bg-zinc-900;
     max-height: calc(100dvh - 2rem - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0));
   }
 
@@ -1023,7 +1136,7 @@
   .app-modal-size-full { max-width: 48rem; }
 
   .app-modal-panel-contact {
-    @apply flex flex-col overflow-hidden p-5 sm:p-6;
+    @apply flex flex-col overflow-hidden rounded-2xl p-6 sm:p-7;
   }
 
   .app-modal-panel-sheet {
@@ -1078,15 +1191,15 @@
   }
 
   .app-btn {
-    @apply inline-flex min-h-11 items-center justify-center rounded-md border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center rounded-lg border px-5 py-2.5 text-sm font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .app-btn-primary {
-    @apply border-zinc-900 bg-zinc-900 text-zinc-50 hover:bg-zinc-700 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300;
+    @apply border-zinc-900 bg-zinc-900 text-zinc-50 shadow-sm hover:bg-zinc-800 dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200;
   }
 
   .app-btn-secondary {
-    @apply border-zinc-300 bg-white text-zinc-700 hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:text-zinc-100;
+    @apply border-zinc-200 bg-transparent text-zinc-500 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:bg-zinc-800/60 dark:hover:text-zinc-200;
   }
 
   .contact-form {
@@ -1094,16 +1207,16 @@
   }
 
   .contact-form-fields {
-    @apply min-h-0 flex-1 space-y-3 overflow-y-auto;
+    @apply min-h-0 flex-1 space-y-4 overflow-y-auto;
     -webkit-overflow-scrolling: touch;
   }
 
   .contact-field-message textarea {
-    @apply min-h-[5.5rem] resize-y;
+    @apply min-h-[6rem] resize-y;
   }
 
   .contact-form-actions {
-    @apply mt-4 flex shrink-0 flex-wrap justify-end gap-2 border-t border-zinc-200 bg-white pt-4 dark:border-zinc-800 dark:bg-zinc-900;
+    @apply mt-4 flex shrink-0 flex-wrap justify-end gap-2.5 border-t border-zinc-200/80 bg-white pt-4 dark:border-zinc-800 dark:bg-zinc-900;
   }
 
   .app-modal-panel-contact .contact-form-fields {
@@ -1147,7 +1260,7 @@
   input[type="text"],
   input[type="email"],
   textarea {
-    @apply w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100;
+    @apply w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm transition-colors duration-200 focus:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-400/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:focus:ring-zinc-500/30;
   }
 
   .sr-only {
@@ -1159,11 +1272,15 @@
 @layer utilities {
   @media (max-width: 1023px) {
     .docs-sidebar {
-      @apply -translate-x-full transition-transform duration-200;
+      @apply -translate-x-full transition-transform duration-300 ease-out;
     }
 
     .docs-sidebar.is-open {
       @apply translate-x-0;
+    }
+
+    .docs-sidebar-backdrop {
+      @apply transition-opacity duration-300;
     }
 
     .docs-content {

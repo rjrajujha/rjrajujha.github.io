@@ -9,43 +9,75 @@
                 <h3 class="portfolio-project-title">
                     <a href="/#{{ section_id }}#{{ project.slug }}" class="portfolio-project-title-link">{{ project.title }}</a>
                 </h3>
-                {% if section_kind == "opensource" %}
-                    {% if project.repo or project.demo %}
-                        <p class="portfolio-project-proof">
-                            {% if project.repo %}
-                                <a href="{{ project.repo }}" target="_blank" rel="noopener noreferrer">GitHub</a>
-                            {% endif %}
-                            {% if project.repo and project.demo %}<span aria-hidden="true"> · </span>{% endif %}
-                            {% if project.demo %}
-                                <a href="{{ project.demo }}" target="_blank" rel="noopener noreferrer">
-                                    {% if "npmjs.com" in project.demo or "npmjs.org" in project.demo %}npm{% else %}Demo{% endif %}
-                                </a>
-                            {% endif %}
-                        </p>
-                    {% endif %}
+                {% if project.repo or project.demo and not project.endpoints %}
+                    <p class="portfolio-project-links">
+                        {% if project.repo %}
+                            <a href="{{ project.repo }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+                        {% endif %}
+                        {% if project.repo and project.demo %}<span aria-hidden="true"> · </span>{% endif %}
+                        {% if project.demo %}
+                            <a href="{{ project.demo }}" target="_blank" rel="noopener noreferrer">
+                                {% if "npmjs.com" in project.demo or "npmjs.org" in project.demo %}npm{% else %}Visit{% endif %}
+                            </a>
+                        {% endif %}
+                    </p>
+                {% elif project.repo %}
+                    <p class="portfolio-project-links">
+                        <a href="{{ project.repo }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+                    </p>
                 {% endif %}
             </div>
         </header>
-        {% if project.outcome or project.description %}
-            <p class="portfolio-project-teaser">{{ project.outcome|default:project.description }}</p>
+
+        {% if project.description %}
+            <p class="portfolio-project-summary">{{ project.description }}</p>
         {% endif %}
-        <div class="portfolio-project-focus">
-            {% if project.description and project.outcome %}
-                <p class="portfolio-project-lead">{{ project.description }}</p>
-            {% endif %}
-            {% if project.outcome %}
-                <p class="portfolio-project-impact">{{ project.outcome }}</p>
-            {% elif project.description %}
-                <p class="portfolio-project-impact">{{ project.description }}</p>
-            {% endif %}
-            {% if project.stack %}
-                <p class="portfolio-project-stack-line">
-                    {% for item in project.stack %}{% if not forloop.first %}<span class="portfolio-project-stack-sep" aria-hidden="true"> · </span>{% endif %}<span>{{ item }}</span>{% endfor %}
-                </p>
-            {% endif %}
-            {% if project.story_html %}
+
+        {% if project.endpoints %}
+            <dl class="portfolio-dns-endpoints">
+                {% for endpoint in project.endpoints %}
+                    <div class="portfolio-dns-endpoint-row">
+                        <dt class="portfolio-dns-endpoint-label">{{ endpoint.label }}</dt>
+                        <dd class="portfolio-dns-endpoint-value">
+                            <code class="portfolio-dns-endpoint-code">{{ endpoint.value }}</code>
+                            <button
+                                type="button"
+                                class="portfolio-copy-btn"
+                                data-copy-endpoint="{{ endpoint.value }}"
+                                aria-label="Copy {{ endpoint.label }}"
+                            >Copy</button>
+                        </dd>
+                    </div>
+                {% endfor %}
+            </dl>
+        {% endif %}
+
+        {% if project.stack %}
+            <ul class="portfolio-tech-badges" aria-label="Tech stack">
+                {% for item in project.stack %}
+                    <li class="portfolio-tech-badge">{{ item }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if project.story_html %}
+            <button
+                type="button"
+                class="portfolio-project-toggle"
+                aria-expanded="false"
+                aria-controls="project-details-{{ project.slug }}"
+            >
+                <span class="portfolio-project-toggle-label">Read more</span>
+                <span class="portfolio-project-toggle-icon" aria-hidden="true">+</span>
+            </button>
+
+            <div
+                id="project-details-{{ project.slug }}"
+                class="portfolio-project-details"
+                hidden
+            >
                 <div class="portfolio-project-notes markdown-body markdown-body-compact">{{ project.story_html|safe }}</div>
-            {% endif %}
-        </div>
+            </div>
+        {% endif %}
     </div>
 </article>

@@ -11,12 +11,12 @@ social_links:
     url: https://linkedin.com/in/rjrajujha
 
 navigation:
-  - id: projects
-    label: Work
-    file: projects.md
   - id: opensource
     label: Open Source
     file: opensource.md
+  - id: infrastructure
+    label: Infrastructure
+    file: infrastructure.md
   - id: experience
     label: Experience
     file: experience.md
@@ -34,6 +34,6 @@ seo:
   title: Raju Jha · Software Engineer
   description: >-
     Engineering profile of Raju Jha — backend systems, full-stack applications,
-    automation platforms, and developer tooling with Node.js, TypeScript, and React.
+    self-hosted infrastructure, and developer tooling with Node.js, TypeScript, and React.
   og_type: profile
   twitter_card: summary_large_image

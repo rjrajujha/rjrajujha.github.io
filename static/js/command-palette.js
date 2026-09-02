@@ -8,10 +8,8 @@
     return;
   }
 
-  const RESULT_LIMIT = 50;
-  const DEFAULT_PROJECT_LIMIT = 6;
-  const TYPE_ORDER = { section: 0, project: 1, heading: 2, action: 3, link: 4 };
-  const TYPE_SCORE_BONUS = { section: 40, project: 30, heading: 20, action: 10, link: 5 };
+  const RESULT_LIMIT = 24;
+  const TYPE_ORDER = { project: 0, section: 1 };
 
   let index = [];
   try {
@@ -21,53 +19,44 @@
     index = [];
   }
 
-  const staticActions = [
-    {
-      type: "action",
-      title: "Contact",
-      subtitle: "Open contact form",
-      url: "#open-contact",
-      text: "contact email message reach",
-    },
-    {
-      type: "action",
-      title: "Toggle theme",
-      subtitle: "Switch light / dark / system",
-      url: "#toggle-theme",
-      text: "theme dark light mode appearance",
-    },
-    {
-      type: "action",
-      title: "Open GitHub",
-      subtitle: "github.com/rjrajujha",
-      url: "https://github.com/rjrajujha",
-      text: "github source code repository",
-    },
-    {
-      type: "action",
-      title: "Open LinkedIn",
-      subtitle: "linkedin.com/in/rjrajujha",
-      url: "https://linkedin.com/in/rjrajujha",
-      text: "linkedin profile",
-    },
-  ];
-
-  const fullIndex = index.concat(staticActions);
-  let filtered = fullIndex.slice();
+  let filtered = index.slice();
   let selectedIndex = 0;
   let isOpen = false;
+  let activeQuery = "";
   /** @type {HTMLElement | null} */
   let previousActiveElement = null;
+
+  const ICONS = {
+    folder:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path></svg>',
+    rocket:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M14 3c3 2 5 5 5 9 0 4-2 7-5 9M9 21H5v-4M14 3L9 8"></path></svg>',
+    mail:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path stroke-linecap="round" d="M3 7l9 6 9-6"></path></svg>',
+  };
 
   function normalize(text) {
     return (text || "").toLowerCase().trim();
   }
 
-  function typeBonus(item) {
-    return TYPE_SCORE_BONUS[item.type] || 0;
+  function iconForItem(item) {
+    if (item.type === "project") {
+      return ICONS.rocket;
+    }
+    if (item.url === "#open-contact") {
+      return ICONS.mail;
+    }
+    return ICONS.folder;
   }
 
-  function compareDefaultItems(a, b) {
+  function typeLabel(item) {
+    if (item.url === "#open-contact") {
+      return "Contact";
+    }
+    return item.type === "project" ? "Project" : "Section";
+  }
+
+  function compareItems(a, b) {
     const typeDelta = (TYPE_ORDER[a.type] ?? 9) - (TYPE_ORDER[b.type] ?? 9);
     if (typeDelta !== 0) {
       return typeDelta;
@@ -75,105 +64,32 @@
     return a.title.localeCompare(b.title);
   }
 
-  function destinationKey(url) {
-    if (!url) {
-      return "";
-    }
-    const normalized = String(url).trim().toLowerCase();
-    if (normalized === "#open-contact") {
-      return "#open-contact";
-    }
-    const match = normalized.match(/^\/#([^#?]+)(?:#([^?#]+))?/);
-    if (match) {
-      const section = match[1];
-      const fragment = match[2];
-      if (!fragment || fragment === section) {
-        return "/#" + section;
-      }
-    }
-    return normalized;
-  }
-
-  function dedupeResults(items) {
-    const seen = new Map();
-    const result = [];
-
-    items.forEach(function (item) {
-      const key = destinationKey(item.url);
-      const existing = seen.get(key);
-      if (!existing) {
-        seen.set(key, item);
-        result.push(item);
-        return;
-      }
-      if ((TYPE_ORDER[item.type] ?? 9) < (TYPE_ORDER[existing.type] ?? 9)) {
-        const index = result.indexOf(existing);
-        if (index >= 0) {
-          result[index] = item;
-        }
-        seen.set(key, item);
-      }
-    });
-
-    return result;
-  }
-
-  function buildDefaultList() {
-    const deduped = dedupeResults(fullIndex);
-    const sections = deduped.filter(function (item) {
-      return item.type === "section";
-    });
-    const projects = deduped
-      .filter(function (item) {
-        return item.type === "project";
-      })
-      .slice(0, DEFAULT_PROJECT_LIMIT);
-    const actions = deduped.filter(function (item) {
-      return item.type === "action";
-    });
-    return sections.concat(projects, actions);
-  }
-
   function scoreItem(item, query) {
     if (!query) {
-      return 1;
+      return TYPE_ORDER[item.type] ?? 9;
     }
 
     const q = normalize(query);
     const title = normalize(item.title);
     const subtitle = normalize(item.subtitle || "");
-    const text = normalize(item.text || "");
     let score = 0;
 
-    if (title === q) {
-      score = 1000;
-    } else if (title.startsWith(q)) {
-      score = 800;
-    } else if (title.includes(q)) {
+    if (item.type === "project") {
+      if (title === q) {
+        score = 1000;
+      } else if (title.startsWith(q)) {
+        score = 850;
+      } else if (title.includes(q)) {
+        score = 700;
+      } else if (subtitle.includes(q)) {
+        score = 400;
+      }
+    } else if (title === q) {
       score = 600;
-    } else if (subtitle.includes(q)) {
-      score = 400;
-    } else if (text.includes(q)) {
-      score = 200;
-    }
-
-    const tokens = q.split(/\s+/).filter(Boolean);
-    if (tokens.length > 1) {
-      let tokenScore = 0;
-      tokens.forEach(function (token) {
-        if (title.includes(token)) {
-          tokenScore += 80;
-        } else if (subtitle.includes(token)) {
-          tokenScore += 40;
-        } else if (text.includes(token)) {
-          tokenScore += 20;
-        }
-      });
-      score = Math.max(score, tokenScore);
-    }
-
-    if (score > 0) {
-      score += typeBonus(item);
+    } else if (title.startsWith(q)) {
+      score = 500;
+    } else if (title.includes(q)) {
+      score = 350;
     }
 
     return score;
@@ -182,27 +98,56 @@
   function search(query) {
     const trimmed = (query || "").trim();
     if (!trimmed) {
-      return buildDefaultList();
+      return index.slice().sort(compareItems);
     }
 
-    return dedupeResults(
-      fullIndex
-        .map(function (item) {
-          return { item: item, score: scoreItem(item, trimmed) };
-        })
-        .filter(function (row) {
-          return row.score > 0;
-        })
-        .sort(function (a, b) {
-          if (b.score !== a.score) {
-            return b.score - a.score;
-          }
-          return compareDefaultItems(a.item, b.item);
-        })
-        .slice(0, RESULT_LIMIT)
-        .map(function (row) {
-          return row.item;
-        })
+    return index
+      .map(function (item) {
+        return { item: item, score: scoreItem(item, trimmed) };
+      })
+      .filter(function (row) {
+        return row.score > 0;
+      })
+      .sort(function (a, b) {
+        if (b.score !== a.score) {
+          return b.score - a.score;
+        }
+        return compareItems(a.item, b.item);
+      })
+      .slice(0, RESULT_LIMIT)
+      .map(function (row) {
+        return row.item;
+      });
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function highlightMatch(text, query) {
+    const source = text || "";
+    const q = normalize(query);
+    if (!q) {
+      return escapeHtml(source);
+    }
+    const lower = source.toLowerCase();
+    const matchIndex = lower.indexOf(q);
+    if (matchIndex === -1) {
+      return escapeHtml(source);
+    }
+    const before = source.slice(0, matchIndex);
+    const match = source.slice(matchIndex, matchIndex + q.length);
+    const after = source.slice(matchIndex + q.length);
+    return (
+      escapeHtml(before) +
+      '<mark class="command-palette-mark">' +
+      escapeHtml(match) +
+      "</mark>" +
+      escapeHtml(after)
     );
   }
 
@@ -218,27 +163,6 @@
     input.setAttribute("aria-activedescendant", optionId(selectedIndex));
   }
 
-  function clampSelectedIndex() {
-    if (!filtered.length) {
-      selectedIndex = 0;
-      return;
-    }
-    selectedIndex = Math.max(0, Math.min(selectedIndex, filtered.length - 1));
-  }
-
-  function scrollSelectedIntoView(behavior) {
-    const selected = resultsEl.querySelector(".command-palette-item.is-selected");
-    if (!selected) {
-      return;
-    }
-
-    selected.scrollIntoView({
-      block: "center",
-      inline: "nearest",
-      behavior: behavior || "auto",
-    });
-  }
-
   function setSelectedIndex(nextIndex, options) {
     const opts = options || {};
     if (!filtered.length) {
@@ -248,8 +172,7 @@
     }
 
     selectedIndex = Math.max(0, Math.min(nextIndex, filtered.length - 1));
-    const items = resultsEl.querySelectorAll(".command-palette-item[data-index]");
-    items.forEach(function (el) {
+    resultsEl.querySelectorAll(".command-palette-item[data-index]").forEach(function (el) {
       const idx = Number(el.getAttribute("data-index"));
       const active = idx === selectedIndex;
       el.classList.toggle("is-selected", active);
@@ -259,27 +182,24 @@
 
     if (opts.scroll) {
       window.requestAnimationFrame(function () {
-        scrollSelectedIntoView("auto");
+        const selected = resultsEl.querySelector(".command-palette-item.is-selected");
+        if (selected) {
+          selected.scrollIntoView({ block: "nearest", inline: "nearest" });
+        }
       });
     }
   }
 
-  function selectItem(item) {
-    if (!item) {
-      return;
-    }
-    executeItem(item);
-  }
-
   function renderResults() {
-    clampSelectedIndex();
     resultsEl.innerHTML = "";
 
     if (!filtered.length) {
       const empty = document.createElement("li");
       empty.className = "command-palette-empty";
       empty.setAttribute("role", "presentation");
-      empty.textContent = "No results found";
+      empty.innerHTML =
+        '<p class="command-palette-empty-title">No results found</p>' +
+        '<p class="command-palette-empty-hint">Try searching for a project or section.</p>';
       resultsEl.appendChild(empty);
       syncActiveDescendant();
       return;
@@ -293,28 +213,35 @@
       li.setAttribute("aria-selected", String(idx === selectedIndex));
       li.setAttribute("data-index", String(idx));
 
+      const icon = document.createElement("span");
+      icon.className = "command-palette-item-icon";
+      icon.innerHTML = iconForItem(item);
+
+      const body = document.createElement("span");
+      body.className = "command-palette-item-body";
+
       const title = document.createElement("span");
       title.className = "command-palette-item-title";
-      title.textContent = item.title;
+      title.innerHTML = highlightMatch(item.title, activeQuery);
 
       const subtitle = document.createElement("span");
       subtitle.className = "command-palette-item-subtitle";
-      subtitle.textContent = item.subtitle || item.type;
+      subtitle.textContent = item.subtitle || typeLabel(item);
 
-      li.appendChild(title);
-      li.appendChild(subtitle);
+      body.appendChild(title);
+      body.appendChild(subtitle);
+      li.appendChild(icon);
+      li.appendChild(body);
 
       li.addEventListener("mouseenter", function () {
         setSelectedIndex(idx, { scroll: false });
       });
-
       li.addEventListener("mousedown", function (event) {
         event.preventDefault();
       });
-
       li.addEventListener("click", function (event) {
         event.preventDefault();
-        selectItem(item);
+        executeItem(item);
       });
 
       resultsEl.appendChild(li);
@@ -327,9 +254,11 @@
     previousActiveElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     isOpen = true;
     palette.classList.remove("is-closed");
+    palette.classList.add("is-open");
     palette.setAttribute("aria-hidden", "false");
     input.setAttribute("aria-expanded", "true");
     input.value = "";
+    activeQuery = "";
     filtered = search("");
     selectedIndex = 0;
     resultsEl.scrollTop = 0;
@@ -343,6 +272,7 @@
   function closePalette() {
     isOpen = false;
     palette.classList.add("is-closed");
+    palette.classList.remove("is-open");
     palette.setAttribute("aria-hidden", "true");
     input.setAttribute("aria-expanded", "false");
     input.removeAttribute("aria-activedescendant");
@@ -354,29 +284,8 @@
     previousActiveElement = null;
   }
 
-  function toggleTheme() {
-    const storageKey = "theme-preference";
-    const order = ["dark", "light", "system"];
-    const current = localStorage.getItem(storageKey) || "system";
-    const next = order[(order.indexOf(current) + 1) % order.length];
-    localStorage.setItem(storageKey, next);
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const useDark = next === "dark" || (next === "system" && mediaQuery.matches);
-    document.documentElement.classList.toggle("dark", useDark);
-    document.documentElement.setAttribute("data-theme", next);
-    document.querySelectorAll("[data-theme-option]").forEach(function (option) {
-      const active = option.getAttribute("data-theme-option") === next;
-      option.classList.toggle("theme-option-active", active);
-    });
-  }
-
   function navigateToUrl(url) {
     if (!url) {
-      return;
-    }
-
-    if (url === "#toggle-theme") {
-      toggleTheme();
       return;
     }
 
@@ -392,11 +301,7 @@
       return;
     }
 
-    let path = url;
-    if (path.charAt(0) !== "/") {
-      path = "/" + path.replace(/^\/?/, "");
-    }
-
+    let path = url.charAt(0) === "/" ? url : "/" + url.replace(/^\/?/, "");
     const hashIndex = path.indexOf("#");
     if (hashIndex !== -1) {
       const pathname = path.slice(0, hashIndex) || "/";
@@ -428,15 +333,13 @@
 
   function executeItem(item) {
     closePalette();
-
-    if (!item || !item.url) {
-      return;
+    if (item && item.url) {
+      navigateToUrl(item.url);
     }
-
-    navigateToUrl(item.url);
   }
 
   function onInput() {
+    activeQuery = input.value.trim();
     filtered = search(input.value);
     selectedIndex = 0;
     resultsEl.scrollTop = 0;
@@ -460,16 +363,10 @@
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       setSelectedIndex(selectedIndex - 1, { scroll: true });
-    } else if (event.key === "Home") {
-      event.preventDefault();
-      setSelectedIndex(0, { scroll: true });
-    } else if (event.key === "End") {
-      event.preventDefault();
-      setSelectedIndex(filtered.length - 1, { scroll: true });
     } else if (event.key === "Enter") {
       event.preventDefault();
       if (filtered[selectedIndex]) {
-        selectItem(filtered[selectedIndex]);
+        executeItem(filtered[selectedIndex]);
       }
     } else if (event.key === "Escape") {
       event.preventDefault();
@@ -479,11 +376,7 @@
 
   document.addEventListener("keydown", function (event) {
     const isK = event.key === "k" || event.key === "K";
-    const meta =
-      event.metaKey ||
-      event.ctrlKey ||
-      (typeof event.getModifierState === "function" && event.getModifierState("Meta")) ||
-      (typeof event.getModifierState === "function" && event.getModifierState("OS"));
+    const meta = event.metaKey || event.ctrlKey;
     if (isK && meta) {
       event.preventDefault();
       if (isOpen) {

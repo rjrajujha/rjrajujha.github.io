@@ -1,23 +1,31 @@
 <div id="command-palette" class="command-palette is-closed" role="dialog" aria-modal="true" aria-label="Command palette" aria-hidden="true">
-    <div class="command-palette-backdrop" data-command-palette-close></div>
+    <div class="command-palette-backdrop" data-command-palette-close tabindex="-1" aria-hidden="true"></div>
     <div class="command-palette-panel" role="document">
-        <div class="command-palette-input-wrap">
-            <input
-                id="command-palette-input"
-                type="search"
-                class="command-palette-input"
-                placeholder="Search sections, projects, commands…"
-                autocomplete="off"
-                spellcheck="false"
-                role="combobox"
-                aria-label="Search"
-                aria-expanded="false"
-                aria-controls="command-palette-results"
-                aria-autocomplete="list"
-            >
-            <kbd class="docs-kbd command-palette-esc">Esc</kbd>
+        <div class="command-palette-header">
+            <label class="command-palette-search" for="command-palette-input">
+                <svg class="command-palette-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <path stroke-linecap="round" d="M20 20l-3-3"></path>
+                </svg>
+                <input
+                    id="command-palette-input"
+                    type="search"
+                    class="command-palette-input"
+                    placeholder="Search projects or sections..."
+                    autocomplete="off"
+                    spellcheck="false"
+                    role="combobox"
+                    aria-label="Search"
+                    aria-expanded="false"
+                    aria-controls="command-palette-results"
+                    aria-autocomplete="list"
+                >
+            </label>
+            <button type="button" class="command-palette-esc-btn" data-command-palette-close aria-label="Close command palette">Esc</button>
         </div>
         <ul id="command-palette-results" class="command-palette-results" role="listbox" aria-label="Results"></ul>
-        <p class="command-palette-hint">↑↓ navigate · Home/End · Enter to open</p>
+        <div class="command-palette-footer">
+            <p class="command-palette-hint">↑↓ Navigate · Enter Open · Esc Close</p>
+        </div>
     </div>
 </div>
