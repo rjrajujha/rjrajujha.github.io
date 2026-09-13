@@ -1,1 +1,1 @@
-"""Projects are content-driven; enable USE_DATABASE to restore ORM admin."""
+"""Projects are content-driven; ORM admin is unused for project content."""

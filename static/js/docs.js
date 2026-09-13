@@ -10,6 +10,26 @@
   let scrollLock = false;
   let scrollLockTimer = null;
 
+  function normalizeSectionId(sectionId) {
+    if (sectionId === "about") {
+      return "intro";
+    }
+    return sectionId;
+  }
+
+  function openProjectDetails(target) {
+    if (!target) {
+      return;
+    }
+    const card = target.closest(".portfolio-project-card");
+    if (!card) {
+      return;
+    }
+    if (window.PortfolioProjects) {
+      window.PortfolioProjects.focusProject(card, { scroll: false, updateHash: true });
+    }
+  }
+
   function setSidebarOpen(open) {
     if (!sidebar) {
       return;
@@ -30,8 +50,9 @@
   }
 
   function setActiveSection(sectionId) {
+    const normalized = normalizeSectionId(sectionId);
     navLinks.forEach(function (link) {
-      const isActive = link.getAttribute("data-section-nav") === sectionId;
+      const isActive = link.getAttribute("data-section-nav") === normalized;
       link.classList.toggle("is-active", isActive);
       if (isActive) {
         link.setAttribute("aria-current", "location");
@@ -42,7 +63,11 @@
   }
 
   function updateHash(sectionId, replace) {
-    const nextHash = "#" + sectionId;
+    const normalized = normalizeSectionId(sectionId);
+    if (normalized === "intro") {
+      return;
+    }
+    const nextHash = "#" + normalized;
     if (window.location.hash === nextHash) {
       return;
     }
@@ -63,22 +88,26 @@
   }
 
   function scrollToSection(sectionId) {
-    if (sectionId === "contact") {
+    const normalized = normalizeSectionId(sectionId);
+
+    if (normalized === "contact") {
       if (window.ContactModal && typeof window.ContactModal.open === "function") {
         window.ContactModal.open();
       }
       return;
     }
 
-    const target = document.getElementById(sectionId);
+    const target = document.getElementById(normalized);
     if (!target) {
-      window.location.assign("/#" + sectionId);
+      window.location.assign("/#" + normalized);
       return;
     }
     lockScrollSync();
     target.scrollIntoView({ behavior: "smooth", block: "start" });
-    setActiveSection(sectionId);
-    updateHash(sectionId, false);
+    if (normalized !== "intro") {
+      setActiveSection(normalized);
+      updateHash(normalized, false);
+    }
   }
 
   function scrollToAnchor(hash) {
@@ -107,7 +136,7 @@
     }
 
     lockScrollSync();
-    const sectionId = parts[0];
+    const sectionId = normalizeSectionId(parts[0]);
     let target = document.getElementById(sectionId);
 
     if (parts.length > 1) {
@@ -118,15 +147,18 @@
     }
 
     if (target) {
+      openProjectDetails(target);
       target.scrollIntoView({ behavior: "smooth", block: "start" });
-      setActiveSection(sectionId);
-      const hashParts = [sectionId];
-      if (parts.length > 1 && parts[parts.length - 1] !== sectionId) {
-        hashParts.push(parts[parts.length - 1]);
-      }
-      const nextHash = "#" + hashParts.join("#");
-      if (window.history && window.history.replaceState) {
-        window.history.replaceState(null, "", window.location.pathname + nextHash);
+      if (sectionId !== "intro") {
+        setActiveSection(sectionId);
+        const hashParts = [sectionId];
+        if (parts.length > 1 && parts[parts.length - 1] !== sectionId) {
+          hashParts.push(parts[parts.length - 1]);
+        }
+        const nextHash = "#" + hashParts.join("#");
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, "", window.location.pathname + nextHash);
+        }
       }
       return;
     }
@@ -153,7 +185,7 @@
         }
 
         const sectionId = visible[0].target.getAttribute("data-section");
-        if (sectionId) {
+        if (sectionId && sectionId !== "intro") {
           setActiveSection(sectionId);
           updateHash(sectionId, true);
         }
@@ -204,7 +236,12 @@
       });
     }
   } else if (sections.length) {
-    setActiveSection(sections[0].getAttribute("data-section"));
+    const firstSection = sections.find(function (section) {
+      return section.getAttribute("data-section") !== "intro";
+    });
+    if (firstSection) {
+      setActiveSection(firstSection.getAttribute("data-section"));
+    }
   }
 
   if (mobileToggle && sidebar) {

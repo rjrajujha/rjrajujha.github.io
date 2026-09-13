@@ -1,7 +1,5 @@
-import os
-
 from django.core.cache import cache
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, override_settings
 from django.urls import reverse
 
 from .resume_access import try_resume_access_reply
@@ -9,7 +7,7 @@ from .services import PortfolioChatService
 
 
 @override_settings(SECURE_SSL_REDIRECT=False, DEBUG=False)
-class ChatbotApiTests(TestCase):
+class ChatbotApiTests(SimpleTestCase):
     def setUp(self):
         cache.clear()
 
@@ -98,18 +96,14 @@ class ChatbotApiTests(TestCase):
         self.assertEqual(second.status_code, 429)
 
 
-class ResumeSecretStrictTests(TestCase):
+@override_settings(
+    SECURE_SSL_REDIRECT=False,
+    RESUME_SECRET_KEY="RESUME-LINK",
+    RESUME_URL="http://rajujha.dev/resume/?id=latest",
+    RESUME_ACCESS_KEY="7596f075702dbdb745d7dccbaf4d5a79259",
+)
+class ResumeSecretStrictTests(SimpleTestCase):
     expected_link = "http://rajujha.dev/resume/?id=latest&key=7596f075702dbdb745d7dccbaf4d5a79259"
-
-    def setUp(self):
-        self._env = os.environ.copy()
-        os.environ["RESUME_SECRET_KEY"] = "RESUME-LINK"
-        os.environ["RESUME_URL"] = "http://rajujha.dev/resume/?id=latest"
-        os.environ["RESUME_ACCESS_KEY"] = "7596f075702dbdb745d7dccbaf4d5a79259"
-
-    def tearDown(self):
-        os.environ.clear()
-        os.environ.update(self._env)
 
     def test_exact_secret_returns_resume_url(self):
         expected = f"You can view my resume here:\n\n[Resume PDF]({self.expected_link})"

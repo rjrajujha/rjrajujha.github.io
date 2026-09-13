@@ -1,4 +1,4 @@
-const CACHE_NAME = "rj-portfolio-shell-v4";
+const CACHE_NAME = "rj-portfolio-shell-v17";
 const OFFLINE_URL = "/offline/";
 const STATIC_ASSETS = [
   OFFLINE_URL,
@@ -6,25 +6,27 @@ const STATIC_ASSETS = [
   "/static/js/theme.js",
   "/static/js/status-modal.js",
   "/static/js/modal.js",
+  "/static/js/portfolio-projects.js",
   "/static/js/docs.js",
   "/static/js/mobile-header.js",
   "/static/js/command-palette.js",
   "/static/js/site.js",
   "/static/js/chatbot.js",
   "/static/manifest.webmanifest",
-  "/static/favicon/favicon.ico",
-  "/static/favicon/favicon-32x32.png",
-  "/static/favicon/favicon-16x16.png",
-  "/static/favicon/apple-touch-icon.png",
-  "/static/favicon/android-chrome-192x192.png",
-  "/static/favicon/android-chrome-512x512.png"
+  "https://rajujha.dev/favicon.ico"
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(STATIC_ASSETS))
+      .then((cache) =>
+        Promise.all(
+          STATIC_ASSETS.map((url) =>
+            cache.add(url).catch(() => undefined)
+          )
+        )
+      )
       .then(() => self.skipWaiting())
   );
 });
@@ -52,7 +54,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   const url = new URL(req.url);
-  if (url.origin !== self.location.origin) {
+  if (url.origin !== self.location.origin && url.href !== "https://rajujha.dev/favicon.ico") {
     return;
   }
 
@@ -65,7 +67,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (!url.pathname.startsWith("/static/")) {
+  if (!url.pathname.startsWith("/static/") && url.href !== "https://rajujha.dev/favicon.ico") {
     return;
   }
 
@@ -74,7 +76,7 @@ self.addEventListener("fetch", (event) => {
       if (cached) {
         fetch(req)
           .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200 && networkResponse.type === "basic") {
+            if (networkResponse && networkResponse.status === 200) {
               caches.open(CACHE_NAME).then((cache) => cache.put(req, networkResponse.clone()));
             }
           })
@@ -84,7 +86,7 @@ self.addEventListener("fetch", (event) => {
 
       return fetch(req)
         .then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== "basic") {
+          if (!networkResponse || networkResponse.status !== 200) {
             return networkResponse;
           }
           const responseClone = networkResponse.clone();

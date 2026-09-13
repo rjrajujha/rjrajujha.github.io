@@ -338,7 +338,10 @@ class PortfolioChatService:
         )
 
     def _resolve_provider(self) -> Provider | None:
+        from portfolio.settings import resolve_chatbot_model
+
         preferred = (settings.CHATBOT_PROVIDER or "local").strip().lower()
+        configured_model = getattr(settings, "CHATBOT_MODEL", "")
         if preferred in {"local", ""}:
             return None
 
@@ -348,7 +351,7 @@ class PortfolioChatService:
                 return None
             return OpenAIProvider(
                 api_key=settings.OPENAI_API_KEY,
-                model=settings.OPENAI_MODEL,
+                model=resolve_chatbot_model("openai", configured_model),
                 timeout=self.timeout,
             )
 
@@ -358,7 +361,7 @@ class PortfolioChatService:
                 return None
             return GeminiProvider(
                 api_key=settings.GEMINI_API_KEY,
-                model=settings.GEMINI_MODEL,
+                model=resolve_chatbot_model("gemini", configured_model),
                 timeout=self.timeout,
             )
 
@@ -366,13 +369,13 @@ class PortfolioChatService:
             if settings.OPENAI_API_KEY:
                 return OpenAIProvider(
                     api_key=settings.OPENAI_API_KEY,
-                    model=settings.OPENAI_MODEL,
+                    model=resolve_chatbot_model("openai", configured_model),
                     timeout=self.timeout,
                 )
             if settings.GEMINI_API_KEY:
                 return GeminiProvider(
                     api_key=settings.GEMINI_API_KEY,
-                    model=settings.GEMINI_MODEL,
+                    model=resolve_chatbot_model("gemini", configured_model),
                     timeout=self.timeout,
                 )
 

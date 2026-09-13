@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.static import serve
 
@@ -9,6 +10,7 @@ handler404 = "apps.core.error_views.page_not_found"
 handler500 = "apps.core.error_views.server_error"
 
 urlpatterns = [
+    path("admin/", admin.site.urls),
     path("", include("apps.core.urls")),
     path("projects/", include("apps.projects.urls")),
     path("contact/", include("apps.contact.urls")),

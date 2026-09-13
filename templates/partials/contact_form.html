@@ -5,38 +5,123 @@
     method="post"
     class="contact-form"
     novalidate
+    data-verify-url="{% url 'contact:verify-otp' %}"
+    data-turnstile-enabled="{% if turnstile_enabled %}true{% else %}false{% endif %}"
+    data-turnstile-sitekey="{{ turnstile_site_key }}"
+    data-otp-ttl-seconds="{{ contact_otp_ttl_seconds }}"
 >
     {% csrf_token %}
     {{ contact_form.company }}
+    {{ contact_form.cf_turnstile_response }}
 
-    <div class="contact-form-fields">
-        <div class="contact-field" data-contact-field="name">
-            <label for="{{ contact_form.name.id_for_label }}" class="form-label">Name</label>
-            {{ contact_form.name }}
-            <p id="contact-error-name" class="field-error" role="alert" hidden></p>
+    <div class="contact-form-step" data-contact-step="details">
+        <p class="contact-form-lead">
+            Send a message. We’ll email you a one-time code to confirm it’s you.
+        </p>
+
+        <div class="contact-form-scroll">
+            <div class="contact-form-fields">
+                <div class="contact-field-grid">
+                    <div class="contact-field" data-contact-field="name">
+                        <label for="{{ contact_form.name.id_for_label }}" class="form-label">Name</label>
+                        {{ contact_form.name }}
+                        <p id="contact-error-name" class="field-error" role="alert" hidden></p>
+                    </div>
+
+                    <div class="contact-field" data-contact-field="email">
+                        <label for="{{ contact_form.email.id_for_label }}" class="form-label">Email</label>
+                        {{ contact_form.email }}
+                        <p id="contact-error-email" class="field-error" role="alert" hidden></p>
+                    </div>
+                </div>
+
+                <div class="contact-field contact-field-message" data-contact-field="message">
+                    <label for="{{ contact_form.message.id_for_label }}" class="form-label">Message</label>
+                    {{ contact_form.message }}
+                    <p id="contact-error-message" class="field-error" role="alert" hidden></p>
+                </div>
+
+                {% if turnstile_enabled %}
+                    <div
+                        class="contact-field contact-turnstile"
+                        data-contact-field="cf_turnstile_response"
+                    >
+                        <span class="form-label" id="contact-turnstile-label">Security check</span>
+                        <p class="contact-form-help contact-turnstile-help">
+                            Complete the check to continue.
+                        </p>
+                        <div
+                            class="contact-turnstile-widget"
+                            data-turnstile-widget
+                            role="group"
+                            aria-labelledby="contact-turnstile-label"
+                        ></div>
+                        <p id="contact-error-turnstile" class="field-error" role="alert" hidden></p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
 
-        <div class="contact-field" data-contact-field="email">
-            <label for="{{ contact_form.email.id_for_label }}" class="form-label">Email</label>
-            {{ contact_form.email }}
-            <p id="contact-error-email" class="field-error" role="alert" hidden></p>
-        </div>
-
-        <div class="contact-field" data-contact-field="subject">
-            <label for="{{ contact_form.subject.id_for_label }}" class="form-label">Subject</label>
-            {{ contact_form.subject }}
-            <p id="contact-error-subject" class="field-error" role="alert" hidden></p>
-        </div>
-
-        <div class="contact-field contact-field-message" data-contact-field="message">
-            <label for="{{ contact_form.message.id_for_label }}" class="form-label">Message</label>
-            {{ contact_form.message }}
-            <p id="contact-error-message" class="field-error" role="alert" hidden></p>
+        <div class="contact-form-actions">
+            <button type="button" class="app-btn app-btn-secondary" data-contact-cancel>
+                Cancel
+            </button>
+            <button
+                id="contact-submit-button"
+                type="submit"
+                class="app-btn app-btn-primary"
+                aria-describedby="contact-submit-hint"
+            >
+                Continue
+            </button>
+            <span id="contact-submit-hint" class="sr-only">
+                Continues to email verification before sending your message.
+            </span>
         </div>
     </div>
 
-    <div class="contact-form-actions">
-        <button type="button" class="app-btn app-btn-secondary" data-contact-cancel>Cancel</button>
-        <button id="contact-submit-button" type="submit" class="app-btn app-btn-primary">Send Message</button>
+    <div class="contact-form-step" data-contact-step="otp" hidden>
+        <p class="contact-form-lead" data-contact-otp-lead role="status" aria-live="polite">
+            Enter the verification code sent to your email.
+        </p>
+        <p class="contact-form-hint" data-contact-otp-countdown hidden aria-live="polite"></p>
+
+        <div class="contact-form-scroll">
+            <div class="contact-form-fields contact-otp-fields">
+                <input type="hidden" name="challenge_id" id="id_challenge_id" value="">
+                <div class="contact-field contact-field-otp" data-contact-field="otp">
+                    <label for="id_otp" class="form-label contact-otp-label">Verification code</label>
+                    <input
+                        type="text"
+                        name="otp"
+                        id="id_otp"
+                        class="form-control contact-otp-input"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        maxlength="12"
+                        placeholder="000000"
+                        enterkeyhint="done"
+                        aria-describedby="contact-otp-help"
+                    >
+                    <p id="contact-otp-help" class="contact-form-help contact-otp-help">
+                        Use the 6-digit code from the email titled “Verify your email”.
+                    </p>
+                    <p id="contact-error-otp" class="field-error contact-otp-error" role="alert" hidden></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="contact-form-actions">
+            <button type="button" class="app-btn app-btn-secondary" data-contact-back>
+                Back
+            </button>
+            <button
+                id="contact-verify-button"
+                type="button"
+                class="app-btn app-btn-primary"
+            >
+                Verify &amp; Send
+            </button>
+        </div>
     </div>
 </form>

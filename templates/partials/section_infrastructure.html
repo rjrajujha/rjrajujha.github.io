@@ -1,0 +1,23 @@
+<section id="{{ section.id }}" class="portfolio-section portfolio-section--infrastructure" data-section="{{ section.id }}">
+    <h2 class="portfolio-eyebrow">Infrastructure</h2>
+
+    <div class="portfolio-infra-group">
+        <h3 class="portfolio-infra-heading">Public Infrastructure</h3>
+        <p class="portfolio-infra-lead">Public self-hosted services built around privacy, networking, and developer utilities.</p>
+        <div class="portfolio-project-stack">
+            {% for project in public_projects %}
+                {% include 'partials/project_card.html' with project=project section_id=section.id section_kind="infrastructure" %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="portfolio-infra-group">
+        <h3 class="portfolio-infra-heading">Personal Infrastructure</h3>
+        <p class="portfolio-infra-lead">Self-hosted tools used for personal automation and private cloud workflows.</p>
+        <div class="portfolio-project-stack">
+            {% for project in personal_projects %}
+                {% include 'partials/project_card.html' with project=project section_id=section.id section_kind="infrastructure" %}
+            {% endfor %}
+        </div>
+    </div>
+</section>

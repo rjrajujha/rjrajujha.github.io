@@ -23,18 +23,16 @@ class HealthCheckView(View):
     http_method_names = ["get"]
 
     def get(self, request, *args, **kwargs):
-        database = "disabled"
+        database = "ok"
         status = "ok"
 
-        if getattr(settings, "USE_DATABASE", False) and settings.DATABASES:
-            database = "ok"
-            try:
-                with connections["default"].cursor() as cursor:
-                    cursor.execute("SELECT 1")
-                    cursor.fetchone()
-            except DatabaseError:
-                database = "unavailable"
-                status = "degraded"
+        try:
+            with connections["default"].cursor() as cursor:
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+        except DatabaseError:
+            database = "unavailable"
+            status = "degraded"
 
         payload = {
             "status": status,

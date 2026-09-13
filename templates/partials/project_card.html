@@ -1,29 +1,83 @@
-<article class="reveal surface-card-interactive p-4 sm:p-5">
-    <div class="flex items-start justify-between gap-3">
-        <h3 class="font-heading text-lg font-semibold text-slate-950 dark:text-slate-100">{{ project.title }}</h3>
-        {% if project.impact %}
-            <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">{{ project.impact }}</span>
-        {% endif %}
-    </div>
+<article
+    id="{{ project.slug }}"
+    class="portfolio-project-card portfolio-project-card--{{ section_kind }}"
+    data-project="{{ project.slug }}"
+>
+    <div class="portfolio-project-main">
+        <header class="portfolio-project-head">
+            <div class="portfolio-project-title-row">
+                <h3 class="portfolio-project-title">
+                    <a href="/#{{ section_id }}#{{ project.slug }}" class="portfolio-project-title-link">{{ project.title }}</a>
+                </h3>
+                {% if project.repo or project.demo and not project.endpoints %}
+                    <p class="portfolio-project-links">
+                        {% if project.repo %}
+                            <a href="{{ project.repo }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+                        {% endif %}
+                        {% if project.repo and project.demo %}<span aria-hidden="true"> · </span>{% endif %}
+                        {% if project.demo %}
+                            <a href="{{ project.demo }}" target="_blank" rel="noopener noreferrer">
+                                {% if "npmjs.com" in project.demo or "npmjs.org" in project.demo %}npm{% else %}Visit{% endif %}
+                            </a>
+                        {% endif %}
+                    </p>
+                {% elif project.repo %}
+                    <p class="portfolio-project-links">
+                        <a href="{{ project.repo }}" target="_blank" rel="noopener noreferrer">GitHub</a>
+                    </p>
+                {% endif %}
+            </div>
+        </header>
 
-    <p class="mt-2.5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ project.headline }}</p>
-    <p class="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{{ project.description }}</p>
-
-    <div class="mt-3 flex flex-wrap gap-2">
-        {% for tech in project.stack_items %}
-            <span class="tag-pill">{{ tech }}</span>
-        {% endfor %}
-    </div>
-
-    <div class="mt-3 flex flex-wrap gap-3 text-sm">
-        {% if project.slug %}
-            <a href="{% url 'projects:detail' project.slug %}" class="link-action">Details</a>
+        {% if project.description %}
+            <p class="portfolio-project-summary">{{ project.description }}</p>
         {% endif %}
-        {% if project.source_url %}
-            <a href="{{ project.source_url }}" class="link-action" target="_blank" rel="noopener noreferrer">Source</a>
+
+        {% if project.endpoints %}
+            <dl class="portfolio-dns-endpoints">
+                {% for endpoint in project.endpoints %}
+                    <div class="portfolio-dns-endpoint-row">
+                        <dt class="portfolio-dns-endpoint-label">{{ endpoint.label }}</dt>
+                        <dd class="portfolio-dns-endpoint-value">
+                            <code class="portfolio-dns-endpoint-code">{{ endpoint.value }}</code>
+                            <button
+                                type="button"
+                                class="portfolio-copy-btn"
+                                data-copy-endpoint="{{ endpoint.value }}"
+                                aria-label="Copy {{ endpoint.label }}"
+                            >Copy</button>
+                        </dd>
+                    </div>
+                {% endfor %}
+            </dl>
         {% endif %}
-        {% if project.demo_url %}
-            <a href="{{ project.demo_url }}" class="link-action" target="_blank" rel="noopener noreferrer">Live Demo</a>
+
+        {% if project.stack %}
+            <ul class="portfolio-tech-badges" aria-label="Tech stack">
+                {% for item in project.stack %}
+                    <li class="portfolio-tech-badge">{{ item }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if project.story_html %}
+            <button
+                type="button"
+                class="portfolio-project-toggle"
+                aria-expanded="false"
+                aria-controls="project-details-{{ project.slug }}"
+            >
+                <span class="portfolio-project-toggle-label">Read more</span>
+                <span class="portfolio-project-toggle-icon" aria-hidden="true">+</span>
+            </button>
+
+            <div
+                id="project-details-{{ project.slug }}"
+                class="portfolio-project-details"
+                hidden
+            >
+                <div class="portfolio-project-notes markdown-body markdown-body-compact">{{ project.story_html|safe }}</div>
+            </div>
         {% endif %}
     </div>
 </article>

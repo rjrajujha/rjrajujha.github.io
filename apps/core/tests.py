@@ -1,4 +1,6 @@
-from django.test import Client, TestCase, override_settings
+from unittest.mock import MagicMock, patch
+
+from django.test import Client, SimpleTestCase, override_settings
 from django.urls import reverse
 
 from apps.core.markdown_loader import load_site_context
@@ -13,15 +15,32 @@ SHELL_MARKERS = (
 )
 
 
-class HomePageTests(TestCase):
+@override_settings(SECURE_SSL_REDIRECT=False)
+class HomePageTests(SimpleTestCase):
     def test_home_page_renders_markdown_sections(self):
         response = self.client.get(reverse("core:home"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Raju Jha")
-        self.assertContains(response, 'id="about"')
+        self.assertContains(response, 'id="intro"')
+        self.assertContains(response, "portfolio-project-stack")
+        self.assertContains(response, "portfolio-project-summary")
+        self.assertContains(response, "portfolio-project-details")
+        self.assertContains(response, "portfolio-tech-badge")
+        self.assertContains(response, "portfolio-project-toggle")
+        self.assertNotContains(response, 'id="about"')
+        self.assertNotContains(response, "stack-deck")
         self.assertNotContains(response, 'data-section="contact"')
         self.assertContains(response, "SyncWave")
         self.assertContains(response, "spa-config-gen")
+        self.assertContains(response, "Secure DNS Infrastructure")
+        self.assertContains(response, "Public Infrastructure")
+        self.assertContains(response, "Personal Infrastructure")
+        self.assertContains(response, "portfolio-dns-endpoints")
+        self.assertContains(response, "data-copy-endpoint")
+        self.assertNotContains(response, "Influencer Marketing")
+        self.assertNotContains(response, 'data-section-nav="projects"')
+        self.assertNotContains(response, ">Work<")
+        self.assertNotContains(response, 'id="projects"')
 
     def test_home_includes_search_index(self):
         response = self.client.get(reverse("core:home"))
@@ -29,16 +48,21 @@ class HomePageTests(TestCase):
         site = load_site_context()
         self.assertGreater(len(site.search_index), 5)
 
-    def test_health_check_reports_database_disabled(self):
+    @patch("apps.core.views.connections")
+    def test_health_check_reports_database_ok(self, mock_connections):
+        cursor = MagicMock()
+        mock_connections.__getitem__.return_value.cursor.return_value.__enter__.return_value = (
+            cursor
+        )
         response = self.client.get(reverse("core:health"))
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload["database"], "disabled")
+        self.assertEqual(payload["database"], "ok")
         self.assertEqual(payload["status"], "ok")
 
 
-@override_settings(DEBUG=False)
-class RuntimeErrorPageTests(TestCase):
+@override_settings(DEBUG=False, SECURE_SSL_REDIRECT=False)
+class RuntimeErrorPageTests(SimpleTestCase):
     NOT_FOUND_URLS = (
         "/random-page",
         "/abc",
@@ -66,9 +90,9 @@ class RuntimeErrorPageTests(TestCase):
     def test_error_page_sidebar_links_point_to_home_sections(self):
         response = self.client.get("/missing-page")
         self.assertEqual(response.status_code, 404)
-        for section_id in ("about", "experience", "projects", "opensource", "skills"):
+        for section_id in ("opensource", "infrastructure", "experience", "skills"):
             self.assertContains(response, f'href="/#{section_id}"', status_code=404)
-        self.assertContains(response, 'data-contact-nav', status_code=404)
+        self.assertContains(response, "data-contact-nav", status_code=404)
 
     def test_offline_page_renders_in_app_shell(self):
         response = self.client.get(reverse("core:offline"))
@@ -93,7 +117,7 @@ class RuntimeErrorPageTests(TestCase):
         client = Client(enforce_csrf_checks=True)
         response = client.post(
             reverse("contact:submit"),
-            {"name": "Test", "email": "test@example.com", "subject": "Hello", "message": "one two three four five"},
+            {"name": "Test", "email": "test@example.com", "message": "one two three four five"},
             HTTP_X_CSRFTOKEN="invalid-token",
         )
         self.assertEqual(response.status_code, 403)
@@ -120,9 +144,10 @@ class RuntimeErrorPageTests(TestCase):
         response = self.client.get(reverse("core:service-worker"))
         self.assertEqual(response.status_code, 200)
         body = response.content.decode()
-        self.assertIn("rj-portfolio-shell-v4", body)
+        self.assertIn("rj-portfolio-shell-v17", body)
         self.assertIn("/static/js/docs.js", body)
         self.assertIn("/static/js/chatbot.js", body)
+        self.assertIn("https://rajujha.dev/favicon.ico", body)
         self.assertEqual(response["Cache-Control"], "no-cache")
 
     def test_manifest_fields_present(self):
@@ -136,4 +161,17 @@ class RuntimeErrorPageTests(TestCase):
         self.assertEqual(payload["start_url"], "/")
         self.assertEqual(payload["display"], "standalone")
         self.assertEqual(payload["theme_color"], "#09090b")
-        self.assertGreaterEqual(len(payload.get("icons", [])), 2)
+        self.assertGreaterEqual(len(payload.get("icons", [])), 1)
+        self.assertEqual(payload["icons"][0]["src"], "https://rajujha.dev/favicon.ico")
+
+    def test_canonical_favicon_in_base_template(self):
+        response = self.client.get(reverse("core:home"))
+        self.assertContains(response, 'href="https://rajujha.dev/favicon.ico"')
+        self.assertEqual(response.content.decode().count('rel="icon"'), 1)
+
+    @override_settings(TURNSTILE_SITE_KEY="site-key", TURNSTILE_SECRET_KEY="secret-key")
+    def test_turnstile_explicit_script_loaded_when_enabled(self):
+        response = self.client.get(reverse("core:home"))
+        self.assertContains(response, "challenges.cloudflare.com/turnstile/v0/api.js?render=explicit")
+        self.assertContains(response, 'data-turnstile-widget')
+        self.assertContains(response, 'data-turnstile-sitekey="site-key"')

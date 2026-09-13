@@ -1,1 +1,1 @@
-"""Chatbot runs without persistence by default; enable USE_DATABASE for optional logging models."""
+"""Chatbot runs without ORM logging models by default."""

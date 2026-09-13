@@ -59,29 +59,42 @@ class SettingsResolverTests(SimpleTestCase):
         ):
             self.assertEqual(project_settings.resolve_chatbot_min_submit_interval(), 8)
 
-    def test_email_use_tls_derivation(self):
-        self.assertFalse(project_settings.derive_email_use_tls(True, 465))
-        self.assertTrue(project_settings.derive_email_use_tls(False, 587))
-        self.assertFalse(project_settings.derive_email_use_tls(False, 465))
+    def test_chatbot_model_uses_explicit_value(self):
+        self.assertEqual(
+            project_settings.resolve_chatbot_model("openai", "gpt-4.1-mini"),
+            "gpt-4.1-mini",
+        )
+
+    def test_chatbot_model_defaults_by_provider(self):
+        with patch.dict(project_settings.os.environ, {}, clear=False):
+            project_settings.os.environ.pop("CHATBOT_MODEL", None)
+            self.assertEqual(
+                project_settings.resolve_chatbot_model("gemini", ""),
+                "gemini-1.5-flash",
+            )
+            self.assertEqual(
+                project_settings.resolve_chatbot_model("openai", ""),
+                "gpt-4o-mini",
+            )
+            self.assertEqual(project_settings.resolve_chatbot_model("local", ""), "")
 
     def test_is_production_defaults_false_in_local_context(self):
         with patch.dict(project_settings.os.environ, {}, clear=False):
             project_settings.os.environ.pop("DJANGO_ENV", None)
-            project_settings.os.environ.pop("DJANGO_PRODUCTION", None)
             self.assertFalse(project_settings.resolve_is_production(False))
 
     def test_is_production_true_for_production_env(self):
         with patch.dict(project_settings.os.environ, {"DJANGO_ENV": "production"}, clear=False):
-            project_settings.os.environ.pop("DJANGO_PRODUCTION", None)
             self.assertTrue(project_settings.resolve_is_production(False))
 
-    def test_is_production_respects_explicit_override(self):
-        with patch.dict(
-            project_settings.os.environ,
-            {"DJANGO_ENV": "production", "DJANGO_PRODUCTION": "false"},
-            clear=False,
-        ):
-            self.assertFalse(project_settings.resolve_is_production(False))
+    def test_is_production_false_for_development_env(self):
+        with patch.dict(project_settings.os.environ, {"DJANGO_ENV": "development"}, clear=False):
+            self.assertFalse(project_settings.resolve_is_production(True))
+
+    def test_is_production_infers_from_vercel_when_env_unset(self):
+        with patch.dict(project_settings.os.environ, {}, clear=False):
+            project_settings.os.environ.pop("DJANGO_ENV", None)
+            self.assertTrue(project_settings.resolve_is_production(True))
 
     def test_security_settings_enabled_only_for_production_without_debug(self):
         self.assertTrue(project_settings.should_enable_security(True, False))

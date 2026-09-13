@@ -12,9 +12,7 @@ RUN npm run build:css
 FROM python:3.12-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    DJANGO_DEBUG=False \
-    DJANGO_PRODUCTION=True \
-    USE_DATABASE=false
+    DJANGO_DEBUG=False
 
 WORKDIR /app
 
@@ -29,7 +27,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 COPY --from=assets /app/static/css/main.css ./static/css/main.css
 
-RUN python manage.py collectstatic --noinput \
+RUN DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/postgres \
+    DJANGO_ENV=development \
+    EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend \
+    python manage.py collectstatic --noinput \
     && chown -R appuser:appuser /app
 
 USER appuser

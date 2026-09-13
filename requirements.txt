@@ -3,3 +3,6 @@ gunicorn>=22.0
 markdown>=3.7
 Pygments>=2.18
 PyYAML>=6.0
+psycopg[binary]>=3.2,<3.3
+supabase>=2.0,<3.0
+whitenoise>=6.6,<7.0

@@ -42,10 +42,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
-    <link rel="icon" href="{% static 'favicon/favicon.ico' %}">
+    <link rel="icon" href="https://rajujha.dev/favicon.ico">
     <link rel="manifest" href="{% static 'manifest.webmanifest' %}">
     <meta name="application-name" content="{{ site.name }}">
     <meta name="theme-color" content="#09090b">
@@ -73,6 +70,7 @@
     <script src="{% static 'js/theme.js' %}" defer></script>
     <script src="{% static 'js/status-modal.js' %}" defer></script>
     <script src="{% static 'js/modal.js' %}" defer></script>
+    <script src="{% static 'js/portfolio-projects.js' %}" defer></script>
     <script src="{% static 'js/docs.js' %}" defer></script>
     <script src="{% static 'js/mobile-header.js' %}" defer></script>
     <script src="{% static 'js/command-palette.js' %}" defer></script>
@@ -80,6 +78,13 @@
     <script src="{% static 'js/chatbot.js' %}" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js" defer></script>
     <script src="{% static 'js/mermaid-init.js' %}" defer></script>
+    {% if turnstile_enabled %}
+    <script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+        async
+        defer
+    ></script>
+    {% endif %}
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

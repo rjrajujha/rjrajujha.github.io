@@ -1,92 +1,178 @@
 import logging
-from dataclasses import dataclass
 
 from django.conf import settings
 from django.contrib import messages
 from django.core.cache import cache
-from django.core.mail import EmailMessage, send_mail
+from django.core.mail import send_mail
 from django.http import HttpResponseRedirect, JsonResponse
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.views import View
 from django.views.generic.edit import FormView
 
-from .forms import ContactForm
+from .forms import CONTACT_EMAIL_SUBJECT, ContactForm, ContactOtpForm
+from .otp import create_challenge, verify_challenge
+from .models import ContactSubmission
+from .services import (
+    build_otp_email,
+    create_pending_submission,
+    deliver_submission,
+    mark_submission_verified,
+)
+from .turnstile import extract_turnstile_token, verify_turnstile_token
 
 logger = logging.getLogger(__name__)
 
+# Separate buckets so OTP verify is never blocked by the form-submit cooldown.
+SUBMIT_RATE_PREFIX = "contact:submit"
+OTP_FAIL_RATE_PREFIX = "contact:otp-fail"
+OTP_FAIL_COOLDOWN_SECONDS = 2
 
-@dataclass(frozen=True)
-class ContactPayload:
-    name: str
-    email: str
-    subject: str
-    message: str
-    ip_address: str | None
-    user_agent: str
+
+def _wants_json(request) -> bool:
+    requested_with = request.headers.get("X-Requested-With", "")
+    accepts = request.headers.get("Accept", "")
+    return requested_with == "XMLHttpRequest" or "application/json" in accepts
+
+
+def _client_ip(request) -> str | None:
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
+
+
+def _rate_limit_key(prefix: str, request) -> str:
+    return f"{prefix}:{_client_ip(request) or 'unknown'}"
+
+
+def _is_rate_limited(request, prefix: str, interval: int) -> bool:
+    """Return True when the caller must wait; stamp the bucket only when allowing."""
+    if interval <= 0:
+        return False
+    cache_key = _rate_limit_key(prefix, request)
+    now_ts = int(timezone.now().timestamp())
+    last_ts = cache.get(cache_key)
+    if last_ts and now_ts - int(last_ts) < interval:
+        return True
+    cache.set(cache_key, now_ts, timeout=max(interval * 2, interval + 1))
+    return False
+
+
+def _otp_fail_rate_limited(request) -> bool:
+    """Short cooldown after failed OTP attempts only (never blocks first verify)."""
+    cache_key = _rate_limit_key(OTP_FAIL_RATE_PREFIX, request)
+    last_ts = cache.get(cache_key)
+    if not last_ts:
+        return False
+    now_ts = int(timezone.now().timestamp())
+    return now_ts - int(last_ts) < OTP_FAIL_COOLDOWN_SECONDS
+
+
+def _mark_otp_failure(request) -> None:
+    cache.set(
+        _rate_limit_key(OTP_FAIL_RATE_PREFIX, request),
+        int(timezone.now().timestamp()),
+        timeout=OTP_FAIL_COOLDOWN_SECONDS * 3,
+    )
 
 
 class ContactSubmitView(FormView):
+    """Step 1: validate form + Turnstile, email OTP, return challenge."""
+
     form_class = ContactForm
     http_method_names = ["post"]
     success_url = reverse_lazy("core:home")
 
     def form_valid(self, form):
-        if self._is_rate_limited():
-            message = "Please wait a short moment before sending another message."
-            if self._wants_json():
+        interval = max(settings.CONTACT_MIN_SUBMIT_INTERVAL_SECONDS, 10)
+        if _is_rate_limited(self.request, SUBMIT_RATE_PREFIX, interval):
+            return self._error_response(
+                "Please wait a short moment before sending another message.",
+                status=429,
+            )
+
+        remote_ip = _client_ip(self.request)
+        turnstile_token = extract_turnstile_token(
+            self.request,
+            form.cleaned_data.get("cf_turnstile_response", ""),
+        )
+        turnstile_ok, turnstile_error = verify_turnstile_token(
+            turnstile_token,
+            remote_ip=remote_ip,
+        )
+        if not turnstile_ok:
+            if _wants_json(self.request):
                 return JsonResponse(
                     {
                         "success": False,
-                        "message": message,
-                        "errors": {},
+                        "message": turnstile_error,
+                        "errors": {"cf_turnstile_response": [turnstile_error]},
                     },
-                    status=429,
+                    status=400,
                 )
-            messages.warning(self.request, message)
+            messages.error(self.request, turnstile_error)
             return self._redirect_to_contact()
 
-        submission = ContactPayload(
+        pending = create_pending_submission(
             name=form.cleaned_data["name"],
             email=form.cleaned_data["email"],
-            subject=form.cleaned_data["subject"],
+            subject=CONTACT_EMAIL_SUBJECT,
             message=form.cleaned_data["message"],
-            ip_address=self._client_ip(),
+            ip_address=remote_ip,
             user_agent=(self.request.META.get("HTTP_USER_AGENT") or "")[:255],
+            turnstile_verified=True,
         )
 
-        notify_sent, ack_sent = self._send_contact_emails(submission)
-        response_message = "Thanks for reaching out. Your message was delivered successfully."
-        response_level = "success"
-        if notify_sent and ack_sent:
-            response_message = (
-                "Thanks for reaching out. Your message was delivered and confirmation email sent."
-            )
-            messages.success(self.request, response_message)
-        elif notify_sent:
-            messages.success(self.request, response_message)
-        else:
-            response_message = "Message delivery failed. Please retry or reach out on LinkedIn."
-            messages.warning(self.request, response_message)
-            response_level = "error"
+        challenge_id, otp = create_challenge(
+            submission_id=str(pending.public_id),
+            name=pending.name,
+            email=pending.email,
+            subject=pending.subject,
+            message=pending.message,
+            ip_address=pending.ip_address,
+            user_agent=pending.user_agent,
+            turnstile_verified=True,
+            submission=pending,
+        )
 
-        if self._wants_json():
+        if not self._send_otp_email(pending.name, pending.email, otp):
+            return self._error_response(
+                "Could not send the verification code. Please try again shortly.",
+                status=502,
+            )
+
+        ttl_seconds = max(int(getattr(settings, "CONTACT_OTP_TTL_SECONDS", 600)), 60)
+        ttl_minutes = max(ttl_seconds // 60, 1)
+        response_message = (
+            f"Code sent to {pending.email}. "
+            f"It expires in {ttl_minutes} minute(s)."
+        )
+
+        if _wants_json(self.request):
             return JsonResponse(
                 {
-                    "success": response_level == "success",
-                    "email_sent": notify_sent,
+                    "success": True,
+                    "requires_otp": True,
+                    "challenge_id": challenge_id,
+                    "submission_id": str(pending.public_id),
                     "message": response_message,
+                    "otp_expires_in_seconds": ttl_seconds,
                     "errors": {},
-                },
-                status=200 if notify_sent else 502,
+                }
             )
 
-        return self._redirect_to_contact()
+        messages.info(self.request, response_message)
+        return HttpResponseRedirect(
+            f"{self.get_success_url()}?open=contact&verify={challenge_id}"
+        )
 
     def form_invalid(self, form):
-        if self._wants_json():
-            field_errors: dict[str, list[str]] = {}
-            for field_name, errors in form.errors.items():
-                field_errors[field_name] = [str(error) for error in errors]
+        if _wants_json(self.request):
+            field_errors = {
+                field_name: [str(error) for error in errors]
+                for field_name, errors in form.errors.items()
+            }
             return JsonResponse(
                 {
                     "success": False,
@@ -101,77 +187,124 @@ class ContactSubmitView(FormView):
             messages.error(self.request, f"{label}: {field_errors[0]}")
         return self._redirect_to_contact()
 
+    def _error_response(self, message: str, status: int = 400):
+        if _wants_json(self.request):
+            return JsonResponse(
+                {"success": False, "message": message, "errors": {}},
+                status=status,
+            )
+        level = messages.warning if status == 429 else messages.error
+        level(self.request, message)
+        return self._redirect_to_contact()
+
     def _redirect_to_contact(self):
         return HttpResponseRedirect(f"{self.get_success_url()}?open=contact")
 
-    def _wants_json(self) -> bool:
-        requested_with = self.request.headers.get("X-Requested-With", "")
-        accepts = self.request.headers.get("Accept", "")
-        return requested_with == "XMLHttpRequest" or "application/json" in accepts
-
-    def _client_ip(self):
-        forwarded_for = self.request.META.get("HTTP_X_FORWARDED_FOR")
-        if forwarded_for:
-            return forwarded_for.split(",")[0].strip()
-        return self.request.META.get("REMOTE_ADDR")
-
-    def _is_rate_limited(self) -> bool:
-        client_ip = self._client_ip() or "unknown"
-        cache_key = f"contact-rate-limit:{client_ip}"
-        interval = max(settings.CONTACT_MIN_SUBMIT_INTERVAL_SECONDS, 10)
-        now_ts = int(timezone.now().timestamp())
-        last_ts = cache.get(cache_key)
-        if last_ts and now_ts - int(last_ts) < interval:
-            return True
-        cache.set(cache_key, now_ts, timeout=interval * 2)
-        return False
-
-    def _send_contact_emails(self, submission: ContactPayload) -> tuple[bool, bool]:
-        notify_subject = f"[Portfolio Contact] {submission.subject}"
-        notify_body = (
-            f"Name: {submission.name}\n"
-            f"Email: {submission.email}\n"
-            f"IP: {submission.ip_address or 'Unknown'}\n\n"
-            f"Message:\n{submission.message}"
-        )
-
-        notify_sent = False
-        ack_sent = False
-        if settings.EMAIL_TO:
-            try:
-                notification = EmailMessage(
-                    subject=notify_subject,
-                    body=notify_body,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[settings.EMAIL_TO],
-                    reply_to=[submission.email],
-                )
-                notification.send(fail_silently=False)
-                notify_sent = True
-            except Exception:  # noqa: BLE001
-                logger.warning("Failed to send contact submission notification email.")
-        else:
-            logger.warning("EMAIL_TO is not configured. Contact notification email skipped.")
-
-        ack_subject = "Thanks for contacting Raju Jha"
-        ack_body = (
-            f"Hi {submission.name},\n\n"
-            "Thank you for reaching out.\n\n"
-            "Your message has been received and I will get back to you as soon as possible.\n\n"
-            "Thanks,\n"
-            "Raju Jha"
-        )
-
+    def _send_otp_email(self, name: str, email: str, otp: str) -> bool:
+        ttl_seconds = max(int(getattr(settings, "CONTACT_OTP_TTL_SECONDS", 600)), 60)
+        subject, body = build_otp_email(name=name, otp=otp, ttl_seconds=ttl_seconds)
         try:
             send_mail(
-                subject=ack_subject,
-                message=ack_body,
+                subject=subject,
+                message=body,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[submission.email],
+                recipient_list=[email],
                 fail_silently=False,
             )
-            ack_sent = True
+            return True
         except Exception:  # noqa: BLE001
-            logger.warning("Failed to send contact acknowledgement email.")
+            logger.warning("Failed to send contact OTP email.", exc_info=True)
+            return False
 
-        return notify_sent, ack_sent
+
+class ContactVerifyOtpView(View):
+    """Step 2: verify OTP, persist submission, then deliver emails."""
+
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        form = ContactOtpForm(request.POST)
+        if not form.is_valid():
+            return self._invalid(form)
+
+        # Do not share the form-submit cooldown. Only throttle rapid failed attempts.
+        if _otp_fail_rate_limited(request):
+            return self._json_or_redirect(
+                success=False,
+                message="Please wait a moment before trying again.",
+                status=429,
+            )
+
+        challenge, error = verify_challenge(
+            form.cleaned_data["challenge_id"],
+            form.cleaned_data["otp"],
+        )
+        if challenge is None:
+            _mark_otp_failure(request)
+            return self._json_or_redirect(success=False, message=error, status=400)
+
+        try:
+            record = mark_submission_verified(challenge)
+        except ContactSubmission.DoesNotExist:
+            logger.warning(
+                "OTP verified but submission missing id=%s",
+                (challenge.submission_id or "")[:8],
+            )
+            return self._json_or_redirect(
+                success=False,
+                message="Verification session expired. Please start again.",
+                status=400,
+            )
+
+        notify_sent = deliver_submission(record)
+
+        if not notify_sent:
+            return self._json_or_redirect(
+                success=False,
+                message="Verification succeeded, but message delivery failed. Please retry later.",
+                status=502,
+            )
+
+        response_message = "Thanks for reaching out. Your message was delivered successfully."
+
+        if _wants_json(request):
+            return JsonResponse(
+                {
+                    "success": True,
+                    "email_sent": True,
+                    "message": response_message,
+                    "errors": {},
+                }
+            )
+
+        messages.success(request, response_message)
+        return HttpResponseRedirect(f"{reverse('core:home')}?open=contact")
+
+    def _invalid(self, form: ContactOtpForm):
+        if _wants_json(self.request):
+            field_errors = {
+                field: [str(error) for error in errors]
+                for field, errors in form.errors.items()
+            }
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "Please enter a valid verification code.",
+                    "errors": field_errors,
+                },
+                status=400,
+            )
+        messages.error(self.request, "Please enter a valid verification code.")
+        return HttpResponseRedirect(f"{reverse('core:home')}?open=contact")
+
+    def _json_or_redirect(self, *, success: bool, message: str, status: int = 200):
+        if _wants_json(self.request):
+            return JsonResponse(
+                {"success": success, "message": message, "errors": {}},
+                status=status if not success else 200,
+            )
+        if success:
+            messages.success(self.request, message)
+        else:
+            messages.error(self.request, message)
+        return HttpResponseRedirect(f"{reverse('core:home')}?open=contact")
